@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.swing.*;
 import umu.tds.appchat.vista.pantallas.VentanaBienvenida;
+import umu.tds.appchat.vista.pantallas.VentanaLogin;
 
 public enum GestorVentanas {
     INSTANCIA;
@@ -17,8 +18,9 @@ public enum GestorVentanas {
     }
     
     public void inicializarAplicacion() {
-        // Registrar solo la ventana de bienvenida
+        // Registrar las ventanas de la aplicación
         registrarVentana(new VentanaBienvenida());
+        registrarVentana(new VentanaLogin());
         
         // Mostrar la ventana inicial
         mostrarVentana(TipoVentana.BIENVENIDA);
@@ -29,24 +31,39 @@ public enum GestorVentanas {
     }
     
     public void mostrarVentana(TipoVentana tipo) {
-        // Ocultar ventana actual si existe
-        if (ventanaActual != null) {
-            ventanaActual.alOcultar();
-            ventanaActual.getPanelPrincipal().setVisible(false);
+        // Obtener la nueva ventana
+        Ventana nuevaVentana = ventanas.get(tipo);
+        
+        if (nuevaVentana == null) {
+            throw new IllegalArgumentException("La ventana solicitada no está registrada: " + tipo);
         }
         
-        // Mostrar nueva ventana
-        ventanaActual = ventanas.get(tipo);
-        
-        if (ventanaActual != null) {
+        // Caso especial para LOGIN (mostrar encima de BIENVENIDA)
+        if (tipo == TipoVentana.LOGIN) {
+            // No ocultar la ventana de bienvenida, la dejamos visible de fondo
+            JFrame loginFrame = nuevaVentana.getPanelPrincipal();
+            nuevaVentana.alMostrar();
+            
+            // Mostrar login centrado en la pantalla
+            loginFrame.setLocationRelativeTo(null);
+            loginFrame.setVisible(true);
+            
+            // Definimos la ventana actual como la de login
+            ventanaActual = nuevaVentana;
+        } else {
+            // Para el resto de ventanas, comportamiento normal
+            if (ventanaActual != null) {
+                ventanaActual.alOcultar();
+                ventanaActual.getPanelPrincipal().setVisible(false);
+            }
+            
+            ventanaActual = nuevaVentana;
             ventanaActual.alMostrar();
             JFrame frame = ventanaActual.getPanelPrincipal();
             frame.setVisible(true);
             
             // Centrar en pantalla
             frame.setLocationRelativeTo(null);
-        } else {
-            throw new IllegalArgumentException("La ventana solicitada no está registrada: " + tipo);
         }
     }
     

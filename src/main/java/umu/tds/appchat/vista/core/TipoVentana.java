@@ -1,5 +1,6 @@
 package umu.tds.appchat.vista.core;
 
 public enum TipoVentana {
-    BIENVENIDA
+    BIENVENIDA,
+    LOGIN
 }

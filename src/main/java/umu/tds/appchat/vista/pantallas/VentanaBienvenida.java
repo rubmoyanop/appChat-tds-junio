@@ -2,7 +2,10 @@ package umu.tds.appchat.vista.pantallas;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 
@@ -57,7 +60,26 @@ public class VentanaBienvenida implements Ventana {
         contentPanel.add(lblDescription);
         
         // Espacio entre elementos
-        contentPanel.add(Box.createRigidArea(new Dimension(0, 100)));
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 60)));
+        
+        // Botón para iniciar sesión
+        JButton btnLogin = new JButton("Iniciar Sesión");
+        btnLogin.setFont(new Font("Arial", Font.BOLD, 16));
+        btnLogin.setBackground(new Color(66, 133, 244));
+        btnLogin.setForeground(Color.BLACK);
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnLogin.setMaximumSize(new Dimension(200, 40));
+        btnLogin.setFocusPainted(false);
+        btnLogin.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Abrir la ventana de login
+                GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.LOGIN);
+            }
+        });
+        contentPanel.add(btnLogin);
+        
+        // Espacio entre elementos
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         
         // Mensaje de estado
         JLabel lblStatus = new JLabel("Versión 1.0 - Desarrollo");
@@ -68,7 +90,6 @@ public class VentanaBienvenida implements Ventana {
         
         // Agregar espacio flexible abajo
         contentPanel.add(Box.createVerticalGlue());
-
     }
 
     @Override
