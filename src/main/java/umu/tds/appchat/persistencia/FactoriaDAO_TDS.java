@@ -6,7 +6,6 @@ import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.modelo.Mensaje;
-import umu.tds.appchat.modelo.Usuario;
 
 /**
  * Implementación concreta de FactoriaDAO para el servicio de persistencia TDS.
