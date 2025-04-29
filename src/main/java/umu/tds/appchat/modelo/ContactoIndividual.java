@@ -3,8 +3,8 @@ package umu.tds.appchat.modelo;
 public class ContactoIndividual extends Contacto{
     private Usuario usuario;
 
-    public ContactoIndividual(Usuario usuario) {
-        super(null);
+    public ContactoIndividual(int id, String nombre, Usuario usuario) {
+        super(id, nombre, null); 
         this.usuario = usuario;
     }
 
