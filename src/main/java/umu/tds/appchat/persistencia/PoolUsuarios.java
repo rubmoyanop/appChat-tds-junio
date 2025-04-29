@@ -30,4 +30,8 @@ public enum PoolUsuarios {
     public void clear() {
         pool.clear();
     }
+
+    public void removeUsuario(int id) {
+        pool.remove(id);
+    }
 }
