@@ -41,17 +41,6 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
     }
 }
 
-// Estas clases se implementarán completamente en issues posteriores. Se deja así para que compile de momento.
-
-class UsuarioDAO_TDS implements UsuarioDAO {
-    @Override public void registrarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public Usuario recuperarUsuario(int id) throws DAOExcepcion { /* Implementación futura */ return null;}
-    @Override public Usuario recuperarUsuarioPorMovil(String movil) throws DAOExcepcion { /* Implementación futura */ return null; }
-    @Override public void modificarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public void borrarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public List<Usuario> recuperarTodosUsuarios() throws DAOExcepcion { /* Implementación futura */ return java.util.Collections.emptyList();}
-}
-
 class ContactoIndividualDAO_TDS implements ContactoIndividualDAO {
     @Override public void registrarContactoIndividual(ContactoIndividual contacto) throws DAOExcepcion {}
     @Override public ContactoIndividual recuperarContactoIndividual(int id) throws DAOExcepcion { return null; }
