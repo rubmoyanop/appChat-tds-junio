@@ -59,4 +59,26 @@ public enum AppChat {
         Usuario usuario = new Usuario(nombre, movil, contrasena, imagen, isPremium);
         usuarioDAO.registrarUsuario(usuario);
     }
+
+   /**
+    * Intenta iniciar sesión con el móvil y contraseña dados.
+    * @param movil Número de móvil.
+    * @param password Contraseña.
+    * @return true si el login es correcto, false en caso contrario.
+    */
+   public boolean login(String movil, String password) {
+       if (movil == null || movil.isBlank() || password == null || password.isBlank()) {
+           return false;
+       }
+       try {
+           Usuario usuario = usuarioDAO.recuperarUsuarioPorMovil(movil);
+           if (usuario != null && usuario.getContrasena().equals(password)) {
+               this.usuarioActual = usuario;
+               return true;
+           }
+       } catch (DAOExcepcion e) {
+           e.printStackTrace();
+       }
+       return false;
+   }
 }
