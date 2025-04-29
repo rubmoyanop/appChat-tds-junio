@@ -7,7 +7,7 @@ public class Usuario {
     private String imagen;
     private boolean isPremium;
 
-    Usuario(String nombre, String movil, String contrasena, String imagen, boolean isPremium) {
+    public Usuario(String nombre, String movil, String contrasena, String imagen, boolean isPremium) {
         this.nombre = nombre;
         this.movil = movil;
         this.contrasena = contrasena;
