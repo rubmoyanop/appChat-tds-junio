@@ -5,8 +5,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import com.toedter.calendar.JDateChooser;
 
-import umu.tds.appchat.controlador.AppChat; 
-import umu.tds.appchat.dao.DAOExcepcion; 
+import umu.tds.appchat.controlador.AppChat;
+import umu.tds.appchat.dao.DAOExcepcion;
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
@@ -30,19 +30,18 @@ public class VentanaRegistro implements Ventana {
     private JPasswordField txtConfirmarContrasena;
     private JDateChooser dateChooser;
     private JTextField txtSaludo;
-    private JLabel lblImagenSeleccionada;
-    private String rutaImagen;
-    
+    private JTextField txtImagenURL; // Field for image URL
+
     public VentanaRegistro() {
         initialize();
     }
-    
+
     private void initialize() {
         frame = new JFrame();
         frame.setUndecorated(true); // Sin bordes de ventana
-        frame.setSize(500, 600); // Tamaño adecuado para el formulario
+        frame.setSize(650, 550); // Aumentar ligeramente la altura para asegurar que todo quepa
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Controlamos el cierre manualmente
-        
+
         // Panel principal con borde
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
@@ -51,18 +50,18 @@ public class VentanaRegistro implements Ventana {
             new EmptyBorder(10, 10, 10, 10)));
         mainPanel.setBackground(Color.WHITE);
         frame.getContentPane().add(mainPanel);
-        
+
         // Panel de título
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BorderLayout());
         titlePanel.setBackground(new Color(240, 240, 240));
         titlePanel.setBorder(new EmptyBorder(5, 10, 5, 10));
         mainPanel.add(titlePanel, BorderLayout.NORTH);
-        
+
         JLabel lblTitle = new JLabel("Registro de usuario");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 16));
         titlePanel.add(lblTitle, BorderLayout.WEST);
-        
+
         JButton btnClose = new JButton("X");
         btnClose.setFocusPainted(false);
         btnClose.setBorderPainted(false);
@@ -74,113 +73,136 @@ public class VentanaRegistro implements Ventana {
             GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.LOGIN);
         });
         titlePanel.add(btnClose, BorderLayout.EAST);
-        
-        // Panel central con formulario (usando JScrollPane para pantallas pequeñas)
+
+        // Panel central con formulario (sin JScrollPane)
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new GridBagLayout());
         formPanel.setBackground(Color.WHITE);
-        
-        // Crear un JScrollPane para permitir desplazamiento
-        JScrollPane scrollPane = new JScrollPane(formPanel);
-        scrollPane.setBorder(null); // Eliminar borde del scrollPane
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-        
+        mainPanel.add(formPanel, BorderLayout.CENTER); // Añadir directamente al centro
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 1.0;
-        int gridy = 0;
-        
-        // Campo Nombre (obligatorio)
-        addLabel(formPanel, "Nombre: *", gbc, gridy++);
+        gbc.weightx = 1.0; // Permitir que los componentes se expandan horizontalmente
+
+        // Fila 0: Etiqueta Nombre
+        addLabel(formPanel, "Nombre: *", gbc, 0, 0, 2); // Ocupa 2 columnas
+
+        // Fila 1: Campo Nombre
         txtNombre = new JTextField();
         txtNombre.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
         formPanel.add(txtNombre, gbc);
-        
-        // Campo Email (opcional)
-        addLabel(formPanel, "Email: (opcional)", gbc, gridy++);
+
+        // Fila 2: Etiqueta Email
+        addLabel(formPanel, "Email: (opcional)", gbc, 0, 2, 2);
+
+        // Fila 3: Campo Email
         txtEmail = new JTextField();
         txtEmail.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
         formPanel.add(txtEmail, gbc);
-        
-        // Campo Teléfono (obligatorio)
-        addLabel(formPanel, "Teléfono: *", gbc, gridy++);
+
+        // Fila 4: Etiqueta Teléfono
+        addLabel(formPanel, "Teléfono: *", gbc, 0, 4, 2);
+
+        // Fila 5: Campo Teléfono
         txtTelefono = new JTextField();
         txtTelefono.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
         formPanel.add(txtTelefono, gbc);
-        
-        // Campo Contraseña (obligatorio)
-        addLabel(formPanel, "Contraseña: *", gbc, gridy++);
+
+        // Fila 6: Etiquetas Contraseña y Confirmar Contraseña
+        addLabel(formPanel, "Contraseña: *", gbc, 0, 6, 1); // Columna 0
+        addLabel(formPanel, "Confirmar contraseña: *", gbc, 1, 6, 1); // Columna 1
+
+        // Fila 7: Campos Contraseña y Confirmar Contraseña
         txtContrasena = new JPasswordField();
         txtContrasena.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.5; // Mitad del ancho
         formPanel.add(txtContrasena, gbc);
-        
-        // Campo Confirmar contraseña (obligatorio)
-        addLabel(formPanel, "Confirmar contraseña: *", gbc, gridy++);
+
         txtConfirmarContrasena = new JPasswordField();
         txtConfirmarContrasena.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.5; // Mitad del ancho
         formPanel.add(txtConfirmarContrasena, gbc);
-        
-        // Campo Fecha de nacimiento (obligatorio)
-        addLabel(formPanel, "Fecha de nacimiento: *", gbc, gridy++);
+        gbc.weightx = 1.0; // Restaurar peso completo para las siguientes filas
+
+        // Fila 8: Etiqueta Fecha Nacimiento
+        addLabel(formPanel, "Fecha de nacimiento: *", gbc, 0, 8, 2);
+
+        // Fila 9: Campo Fecha Nacimiento
         dateChooser = new JDateChooser();
         dateChooser.setFont(new Font("Arial", Font.PLAIN, 14));
         dateChooser.setDate(new Date()); // Pone la fecha actual por defecto
-        gbc.gridy = gridy++;
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
         formPanel.add(dateChooser, gbc);
-        
-        // Campo Saludo (opcional)
-        addLabel(formPanel, "Saludo: (opcional)", gbc, gridy++);
+
+        // Fila 10: Etiquetas Saludo e Imagen URL
+        addLabel(formPanel, "Saludo: (opcional)", gbc, 0, 10, 1); // Columna 0
+        addLabel(formPanel, "URL Imagen de perfil: (opcional)", gbc, 1, 10, 1); // Columna 1
+
+        // Fila 11 y 12: Campos Saludo e Imagen URL
         txtSaludo = new JTextField();
         txtSaludo.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridy = gridy++;
+        // Hacer el campo de saludo más alto
+        txtSaludo.setPreferredSize(new Dimension(txtSaludo.getPreferredSize().width, 60));
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 2; // Ocupa dos filas de alto
+        gbc.weightx = 0.5;
+        gbc.fill = GridBagConstraints.BOTH; // Relleno vertical y horizontal
         formPanel.add(txtSaludo, gbc);
-        
-        // Campo Imagen (opcional)
-        addLabel(formPanel, "Imagen de perfil: (opcional)", gbc, gridy++);
-        
-        JPanel imagenPanel = new JPanel(new BorderLayout(10, 0));
-        imagenPanel.setBackground(Color.WHITE);
-        
-        // Etiqueta para mostrar la imagen seleccionada o un texto predeterminado
-        lblImagenSeleccionada = new JLabel("Ninguna imagen seleccionada");
-        lblImagenSeleccionada.setFont(new Font("Arial", Font.ITALIC, 12));
-        imagenPanel.add(lblImagenSeleccionada, BorderLayout.CENTER);
-        
-        // Botón para seleccionar imagen
-        JButton btnSeleccionarImagen = new JButton("Seleccionar imagen");
-        btnSeleccionarImagen.setFont(new Font("Arial", Font.PLAIN, 12));
-        btnSeleccionarImagen.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                mostrarError("En desarrollo");
-            }
-        });
-        imagenPanel.add(btnSeleccionarImagen, BorderLayout.EAST);
-        
-        gbc.gridy = gridy++;
-        formPanel.add(imagenPanel, gbc);
-        
-        // Información campos obligatorios
+
+        // Campo de texto para la URL de la imagen (a la derecha del saludo)
+        txtImagenURL = new JTextField();
+        txtImagenURL.setFont(new Font("Arial", Font.PLAIN, 14));
+        txtImagenURL.setToolTipText("Introduce la URL de una imagen (ej: https://ejemplo.com/imagen.jpg)");
+        gbc.gridx = 1;
+        gbc.gridy = 11;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 2; // Ocupa dos filas como el saludo
+        gbc.weightx = 0.5;
+        gbc.fill = GridBagConstraints.BOTH; // Relleno vertical y horizontal
+        formPanel.add(txtImagenURL, gbc);
+
+        // Restaurar valores por defecto de gbc para las siguientes filas
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridheight = 1;
+        gbc.weightx = 1.0;
+
+        // Fila 13: Información campos obligatorios
         JLabel lblCamposObligatorios = new JLabel("* Campos obligatorios");
         lblCamposObligatorios.setFont(new Font("Arial", Font.ITALIC, 12));
         lblCamposObligatorios.setForeground(Color.RED);
-        gbc.gridy = gridy++;
-        gbc.insets = new Insets(15, 5, 8, 5);
+        gbc.gridx = 0;
+        gbc.gridy = 13;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(10, 5, 8, 5); // Más espacio arriba
         formPanel.add(lblCamposObligatorios, gbc);
-        
+
         // Panel para botones
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
         buttonPanel.setBackground(Color.WHITE);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        
+
         // Botón Cancelar
         JButton btnCancelar = new JButton("Cancelar");
         btnCancelar.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -190,7 +212,7 @@ public class VentanaRegistro implements Ventana {
             }
         });
         buttonPanel.add(btnCancelar);
-        
+
         // Botón Registrar
         JButton btnRegistrar = new JButton("Registrar");
         btnRegistrar.setFont(new Font("Arial", Font.BOLD, 14));
@@ -210,12 +232,13 @@ public class VentanaRegistro implements Ventana {
                     String confirmarContrasena = new String(txtConfirmarContrasena.getPassword());
                     Date fechaNacimiento = dateChooser.getDate();
                     String saludo = txtSaludo.getText().trim();
+                    String imagenURL = txtImagenURL.getText().trim(); // Obtener la URL del campo de texto
 
                     try {
-                        // Llamar al controlador para registrar el usuario
+                        // Llamar al controlador para registrar el usuario, pasando la URL
                         boolean registroExitoso = AppChat.INSTANCE.registrarUsuario(
                                 nombre, email, fechaNacimiento, telefono, contrasena,
-                                confirmarContrasena, rutaImagen, saludo, false); 
+                                confirmarContrasena, imagenURL, saludo, false); // Usar imagenURL
 
                         if (registroExitoso) {
                             // Mostrar mensaje de éxito
@@ -245,70 +268,73 @@ public class VentanaRegistro implements Ventana {
             }
         });
         buttonPanel.add(btnRegistrar);
-        
+
         // Para hacer dragable la ventana
         FrameDragListener frameDragListener = new FrameDragListener(frame);
         titlePanel.addMouseListener(frameDragListener);
         titlePanel.addMouseMotionListener(frameDragListener);
     }
-    
-    private void addLabel(JPanel panel, String text, GridBagConstraints gbc, int y) {
+
+    // Método auxiliar addLabel modificado para aceptar coordenadas y ancho
+    private void addLabel(JPanel panel, String text, GridBagConstraints gbc, int x, int y, int width) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridx = x;
         gbc.gridy = y;
+        gbc.gridwidth = width;
         panel.add(label, gbc);
     }
-    
+
     private boolean validarFormulario() {
         // Validar campos obligatorios
         if (txtNombre.getText().trim().isEmpty()) {
             mostrarError("El nombre es obligatorio");
             return false;
         }
-        
+
         if (txtTelefono.getText().trim().isEmpty()) {
             mostrarError("El teléfono es obligatorio");
             return false;
         }
-        
+
         if (new String(txtContrasena.getPassword()).isEmpty()) {
             mostrarError("La contraseña es obligatoria");
             return false;
         }
-        
+
         if (new String(txtConfirmarContrasena.getPassword()).isEmpty()) {
             mostrarError("Debe confirmar la contraseña");
             return false;
         }
-        
+
         // Validar que las contraseñas coincidan
         if (!new String(txtContrasena.getPassword()).equals(new String(txtConfirmarContrasena.getPassword()))) {
             mostrarError("Las contraseñas no coinciden");
             return false;
         }
-        
+
         // Validar que se haya seleccionado una fecha
         if (dateChooser.getDate() == null) {
             mostrarError("La fecha de nacimiento es obligatoria");
             return false;
         }
-        
+
         // Validar formato de teléfono (solo números)
         if (!txtTelefono.getText().matches("\\d+")) {
             mostrarError("El teléfono debe contener solo números");
             return false;
         }
-        
+
         // Validar formato de email si se ha proporcionado
         String email = txtEmail.getText().trim();
         if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             mostrarError("El formato del email no es válido");
             return false;
         }
-        
+
         return true;
     }
-    
+
     private void mostrarError(String mensaje) {
         JOptionPane.showMessageDialog(frame, mensaje, "Error de validación", JOptionPane.ERROR_MESSAGE);
     }
@@ -328,9 +354,8 @@ public class VentanaRegistro implements Ventana {
         txtConfirmarContrasena.setText("");
         dateChooser.setDate(new Date()); // Fecha actual
         txtSaludo.setText("");
-        lblImagenSeleccionada.setText("Ninguna imagen seleccionada");
-        rutaImagen = null;
-        
+        txtImagenURL.setText(""); // Clear the URL field
+
         // Poner el foco en el primer campo
         txtNombre.requestFocus();
     }
@@ -346,7 +371,7 @@ public class VentanaRegistro implements Ventana {
     public TipoVentana getTipo() {
         return TipoVentana.REGISTRO;
     }
-    
+
     // Clase interna para permitir arrastrar la ventana sin bordes
     private class FrameDragListener extends MouseAdapter {
         private final JFrame frame;
@@ -367,7 +392,7 @@ public class VentanaRegistro implements Ventana {
         public void mouseDragged(MouseEvent e) {
             if (mouseDownCompCoords != null) {
                 Point currCoords = e.getLocationOnScreen();
-                frame.setLocation(currCoords.x - mouseDownCompCoords.x, 
+                frame.setLocation(currCoords.x - mouseDownCompCoords.x,
                                  currCoords.y - mouseDownCompCoords.y);
             }
         }
