@@ -17,19 +17,6 @@ public class Usuario {
     private boolean isPremium;
     private List<Contacto> contactos;
 
-    public Usuario(int id, String nombre, String movil, String contrasena, String imagen, LocalDate fechaNacimiento, String saludo, List<Contacto> contactos, boolean isPremium) {
-        this.id = id;
-        this.nombre = nombre;
-        this.email = null; // Email no asignado en este constructor
-        this.movil = movil;
-        this.contrasena = contrasena;
-        this.imagen = imagen;
-        this.fechaNacimiento = fechaNacimiento;
-        this.saludo = saludo;
-        this.contactos = contactos;
-        this.isPremium = isPremium;
-    }
-
     public Usuario(String nombre, String email, LocalDate fechaNacimiento, String movil, String contrasena, String imagen, String saludo, boolean isPremium) {
         this.id = 0;
         this.nombre = nombre;
