@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import umu.tds.appchat.controlador.AppChat; // Importar el controlador
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
@@ -124,20 +125,37 @@ public class VentanaLogin implements Ventana {
         btnLogin.setFocusPainted(false);
         btnLogin.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String telefono = txtTelefono.getText();
+                String telefono = txtTelefono.getText().trim();
                 String contrasena = new String(txtContrasena.getPassword());
-                
+
                 if (telefono.isEmpty() || contrasena.isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, 
-                            "Por favor, complete todos los campos",
+                    JOptionPane.showMessageDialog(frame,
+                            "Por favor, complete todos los campos.",
                             "Campos incompletos", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                
-                // Aquí iría la validación real de credenciales
-                JOptionPane.showMessageDialog(frame, 
-                        "En desarrollo",
-                        "Información", JOptionPane.INFORMATION_MESSAGE);
+
+                // Llamar al controlador para intentar iniciar sesión
+                boolean loginExitoso = AppChat.INSTANCE.login(telefono, contrasena);
+
+                if (loginExitoso) {
+                    // Login correcto
+                    JOptionPane.showMessageDialog(frame,
+                            "Inicio de sesión exitoso.",
+                            "Bienvenido", JOptionPane.INFORMATION_MESSAGE);
+                    // TODO: Navegar a la ventana principal de la aplicación cuando esté implementada
+                    // GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.PRINCIPAL);
+                    // Por ahora, podríamos volver a la bienvenida o cerrar esta ventana
+                    GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.BIENVENIDA); // O cerrar frame.dispose();
+                } else {
+                    // Login incorrecto
+                    JOptionPane.showMessageDialog(frame,
+                            "Teléfono o contraseña incorrectos.",
+                            "Error de inicio de sesión", JOptionPane.ERROR_MESSAGE);
+                    // Limpiar contraseña y mantener el foco
+                    txtContrasena.setText("");
+                    txtContrasena.requestFocus();
+                }
             }
         });
         buttonPanel.add(btnLogin);
