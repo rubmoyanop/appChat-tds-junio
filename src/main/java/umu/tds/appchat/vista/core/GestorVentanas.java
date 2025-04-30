@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.swing.*;
 import umu.tds.appchat.vista.pantallas.VentanaBienvenida;
 import umu.tds.appchat.vista.pantallas.VentanaLogin;
+import umu.tds.appchat.vista.pantallas.VentanaRegistro;
 
 public enum GestorVentanas {
     INSTANCIA;
@@ -21,6 +22,7 @@ public enum GestorVentanas {
         // Registrar las ventanas de la aplicación
         registrarVentana(new VentanaBienvenida());
         registrarVentana(new VentanaLogin());
+        registrarVentana(new VentanaRegistro());
         
         // Mostrar la ventana inicial
         mostrarVentana(TipoVentana.BIENVENIDA);
@@ -38,17 +40,26 @@ public enum GestorVentanas {
             throw new IllegalArgumentException("La ventana solicitada no está registrada: " + tipo);
         }
         
-        // Caso especial para LOGIN (mostrar encima de BIENVENIDA)
-        if (tipo == TipoVentana.LOGIN) {
+        // Caso especial para LOGIN y REGISTRO (mostrar encima de BIENVENIDA)
+        if (tipo == TipoVentana.LOGIN || tipo == TipoVentana.REGISTRO) {
+            // Si estamos en LOGIN y queremos ir a REGISTRO, o viceversa, 
+            // ocultar la ventana actual
+            if (ventanaActual != null && 
+                (ventanaActual.getTipo() == TipoVentana.LOGIN || 
+                 ventanaActual.getTipo() == TipoVentana.REGISTRO)) {
+                ventanaActual.alOcultar();
+                ventanaActual.getPanelPrincipal().setVisible(false);
+            }
+            
             // No ocultar la ventana de bienvenida, la dejamos visible de fondo
-            JFrame loginFrame = nuevaVentana.getPanelPrincipal();
+            JFrame nuevaFrame = nuevaVentana.getPanelPrincipal();
             nuevaVentana.alMostrar();
             
-            // Mostrar login centrado en la pantalla
-            loginFrame.setLocationRelativeTo(null);
-            loginFrame.setVisible(true);
+            // Mostrar ventana centrada en la pantalla
+            nuevaFrame.setLocationRelativeTo(null);
+            nuevaFrame.setVisible(true);
             
-            // Definimos la ventana actual como la de login
+            // Definimos la ventana actual como la nueva ventana
             ventanaActual = nuevaVentana;
         } else {
             // Para el resto de ventanas, comportamiento normal
@@ -71,3 +82,5 @@ public enum GestorVentanas {
         return ventanaActual;
     }
 }
+    
+

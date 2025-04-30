@@ -153,7 +153,7 @@ public class VentanaLogin implements Ventana {
         lblNoAccount.setFont(new Font("Arial", Font.PLAIN, 12));
         registroPanel.add(lblNoAccount);
         
-        // Botón de Registro (estilo enlace)
+        // Botón de Registro (estilo enlace) - Modificar para abrir ventana de registro
         JButton btnRegistro = new JButton("Regístrate aquí");
         btnRegistro.setFont(new Font("Arial", Font.BOLD, 12));
         btnRegistro.setBorderPainted(false);
@@ -163,10 +163,8 @@ public class VentanaLogin implements Ventana {
         btnRegistro.setFocusPainted(false);
         btnRegistro.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // Mostrar un mensaje indicando que la funcionalidad no está implementada
-                JOptionPane.showMessageDialog(frame, 
-                        "La función de registro aún no está implementada.",
-                        "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
+                // Abrir la ventana de registro
+                GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.REGISTRO);
             }
         });
         registroPanel.add(btnRegistro);
