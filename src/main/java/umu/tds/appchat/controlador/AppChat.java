@@ -1,4 +1,8 @@
 package umu.tds.appchat.controlador;
+import java.time.LocalDate; 
+import java.time.ZoneId; 
+import java.util.Date;
+
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -32,32 +36,47 @@ public enum AppChat {
    /**
      * Registra un nuevo usuario en el sistema.
      * @param nombre Nombre del usuario.
+     * @param email Email del usuario (opcional).
+     * @param fechaNac Fecha de nacimiento del usuario.
      * @param movil Número de móvil.
      * @param contrasena Contraseña.
      * @param contrasenaRepetida Confirmación de contraseña.
-     * @param imagen Ruta de la imagen.
+     * @param imagen Ruta de la imagen (opcional).
+     * @param saludo Saludo del usuario (opcional).
      * @param isPremium Si es premium.
-     * @throws IllegalArgumentException Si los datos no son válidos.
+     * @return true si el registro fue exitoso, false si el móvil ya existe.
+     * @throws IllegalArgumentException Si los datos de entrada no son válidos.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    public void registrarUsuario(String nombre, String movil, String contrasena, String contrasenaRepetida, String imagen, boolean isPremium) throws DAOExcepcion {
-        // Validaciones de los datos de entrada
+    public boolean registrarUsuario(String nombre, String email, Date fechaNac, String movil, String contrasena, String contrasenaRepetida, String imagen, String saludo, boolean isPremium) throws DAOExcepcion {
+        // Validaciones de los datos de entrada (lanzan IllegalArgumentException)
         if (nombre == null || nombre.isBlank() ||
             movil == null || movil.isBlank() ||
             contrasena == null || contrasena.isBlank() ||
-            contrasenaRepetida == null || contrasenaRepetida.isBlank()) {
-            throw new IllegalArgumentException("Todos los campos obligatorios deben estar completos.");
+            contrasenaRepetida == null || contrasenaRepetida.isBlank() ||
+            fechaNac == null) {
+            throw new IllegalArgumentException("Todos los campos obligatorios (nombre, móvil, contraseña, fecha nacimiento) deben estar completos.");
         }
         if (!contrasena.equals(contrasenaRepetida)) {
             throw new IllegalArgumentException("Las contraseñas no coinciden.");
         }
-        // Comprobamos si el móvil ya existe
-        if (usuarioDAO.recuperarUsuarioPorMovil(movil) != null) {
-            throw new IllegalArgumentException("Ya existe un usuario con ese número de móvil.");
+        if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+             throw new IllegalArgumentException("El formato del email no es válido.");
         }
+        // Comprobamos si el móvil ya existe (devuelve false si existe)
+        if (usuarioDAO.recuperarUsuarioPorMovil(movil) != null) {
+            return false; // Indica que el móvil ya está registrado
+        }
+
+        // Convertir java.util.Date a java.time.LocalDate
+        LocalDate fechaNacimientoLocalDate = fechaNac.toInstant()
+                                                     .atZone(ZoneId.systemDefault())
+                                                     .toLocalDate();
+
         // Creamos y registramos el usuario
-        Usuario usuario = new Usuario(nombre, movil, contrasena, imagen, isPremium);
-        usuarioDAO.registrarUsuario(usuario);
+        Usuario usuario = new Usuario(nombre, email, fechaNacimientoLocalDate, movil, contrasena, imagen, saludo, isPremium);
+        usuarioDAO.registrarUsuario(usuario); // Lanza DAOExcepcion si falla la persistencia
+        return true; // Indica que el registro fue exitoso
     }
 
    /**

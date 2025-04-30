@@ -8,6 +8,9 @@ import tds.driver.ServicioPersistencia;
 import beans.Entidad;
 import beans.Propiedad;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,6 +18,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
 
     private ServicioPersistencia servPersistencia;
     private PoolUsuarios poolUsuarios;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public UsuarioDAO_TDS() {
         servPersistencia = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
@@ -28,16 +32,18 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
      */
     private Entidad usuarioToEntidad(Usuario usuario) {
         Entidad entidad = new Entidad();
-        entidad.setNombre("Usuario"); // Tipo de entidad
+        entidad.setNombre("Usuario");
 
         List<Propiedad> propiedades = new LinkedList<>();
         propiedades.add(new Propiedad("nombre", usuario.getNombre()));
+        propiedades.add(new Propiedad("email", usuario.getEmail() != null ? usuario.getEmail() : ""));
         propiedades.add(new Propiedad("movil", usuario.getMovil()));
         propiedades.add(new Propiedad("contrasena", usuario.getContrasena()));
         propiedades.add(new Propiedad("imagen", usuario.getImagen() != null ? usuario.getImagen() : ""));
+        String fechaNacStr = usuario.getFechaNacimiento() != null ? usuario.getFechaNacimiento().format(DATE_FORMATTER) : "";
+        propiedades.add(new Propiedad("fechaNacimiento", fechaNacStr));
+        propiedades.add(new Propiedad("saludo", usuario.getSaludo() != null ? usuario.getSaludo() : ""));
         propiedades.add(new Propiedad("isPremium", String.valueOf(usuario.isPremium())));
-        // TODO: Mapear lista de contactos cuando se implemente la relación
-        // propiedades.add(new Propiedad("contactos", ...));
         entidad.setPropiedades(propiedades);
         return entidad;
     }
@@ -49,52 +55,53 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
      * @throws DAOExcepcion Si ocurre un error durante la conversión.
      */
     private Usuario entidadToUsuario(Entidad entidad) throws DAOExcepcion {
-        // Comprobar si la entidad es nula
         if (entidad == null) {
             throw new DAOExcepcion("Entidad nula al convertir a Usuario.");
         }
-
-        // Comprobar si la entidad es del tipo correcto
         if (!"Usuario".equals(entidad.getNombre())) {
             throw new DAOExcepcion("Entidad no es del tipo Usuario.");
         }
-
-        // Comprobar si la entidad tiene ID
         if (entidad.getId() == 0) {
             throw new DAOExcepcion("Entidad Usuario sin ID.");
         }
-
-        // Comprobar si ya existe en el Pool
         if (poolUsuarios.contains(entidad.getId())) {
             return poolUsuarios.getUsuario(entidad.getId());
         }
 
-        // Recuperamos propiedades de la entidad
         String nombre = null;
+        String email = null;
         String movil = null;
         String contrasena = null;
         String imagen = null;
+        LocalDate fechaNacimiento = null;
+        String saludo = null;
         boolean isPremium = false;
 
         try {
             nombre = servPersistencia.recuperarPropiedadEntidad(entidad, "nombre");
+            email = servPersistencia.recuperarPropiedadEntidad(entidad, "email");
             movil = servPersistencia.recuperarPropiedadEntidad(entidad, "movil");
             contrasena = servPersistencia.recuperarPropiedadEntidad(entidad, "contrasena");
             imagen = servPersistencia.recuperarPropiedadEntidad(entidad, "imagen");
+            String fechaNacStr = servPersistencia.recuperarPropiedadEntidad(entidad, "fechaNacimiento");
+            if (fechaNacStr != null && !fechaNacStr.isEmpty()) {
+                try {
+                    fechaNacimiento = LocalDate.parse(fechaNacStr, DATE_FORMATTER);
+                } catch (DateTimeParseException e) {
+                    System.err.println("Error parseando fecha de nacimiento para usuario ID " + entidad.getId() + ": " + fechaNacStr);
+                }
+            }
+            saludo = servPersistencia.recuperarPropiedadEntidad(entidad, "saludo");
             String premiumStr = servPersistencia.recuperarPropiedadEntidad(entidad, "isPremium");
             isPremium = Boolean.parseBoolean(premiumStr);
         } catch (Exception e) {
             throw new DAOExcepcion("Error al recuperar propiedad de Entidad Usuario con ID: " + entidad.getId(), e);
         }
 
-        // Creamos una instancia del Usuario
-        Usuario usuario = new Usuario(nombre, movil, contrasena, imagen, isPremium);
+        Usuario usuario = new Usuario(nombre, email, fechaNacimiento, movil, contrasena, imagen, saludo, isPremium);
         usuario.setId(entidad.getId());
 
-        // Añadimos al Pool ANTES de recuperar relaciones para evitar ciclos
         poolUsuarios.addUsuario(usuario);
-
-        // TODO: Recuperar relaciones (Contactos) Cuando se haga la implementación DAO de contacto
 
         return usuario;
     }
@@ -160,14 +167,23 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
                 String nuevoValor = null;
                 switch (nombreProp) {
                     case "nombre":      nuevoValor = usuario.getNombre(); break;
+                    case "email":       nuevoValor = usuario.getEmail() != null ? usuario.getEmail() : ""; break;
                     case "movil":       nuevoValor = usuario.getMovil(); break;
                     case "contrasena":  nuevoValor = usuario.getContrasena(); break;
                     case "imagen":      nuevoValor = usuario.getImagen() != null ? usuario.getImagen() : ""; break;
+                    case "fechaNacimiento":
+                        nuevoValor = usuario.getFechaNacimiento() != null ? usuario.getFechaNacimiento().format(DATE_FORMATTER) : "";
+                        break;
+                    case "saludo":      nuevoValor = usuario.getSaludo() != null ? usuario.getSaludo() : ""; break;
                     case "isPremium":   nuevoValor = String.valueOf(usuario.isPremium()); break;
                     default: continue;
                 }
-                if (nuevoValor != null && !nuevoValor.equals(prop.getValor())) {
+                String valorActual = prop.getValor();
+                if (nuevoValor != null && !nuevoValor.equals(valorActual)) {
                     prop.setValor(nuevoValor);
+                    servPersistencia.modificarPropiedad(prop);
+                } else if (nuevoValor == null && valorActual != null) {
+                    prop.setValor("");
                     servPersistencia.modificarPropiedad(prop);
                 }
             }

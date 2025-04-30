@@ -24,6 +24,7 @@ public class App
             
             // Inicializar la aplicación con la ventana de bienvenida
             GestorVentanas.INSTANCIA.inicializarAplicacion();
+            //AppChatDriver.main(args);
         });
     }
 }

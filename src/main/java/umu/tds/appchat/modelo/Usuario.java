@@ -2,22 +2,25 @@ package umu.tds.appchat.modelo;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Usuario {
-    private int id; 
+    private int id;
     private String nombre;
+    private String email;
     private String movil;
     private String contrasena;
     private String imagen;
-    private LocalDate fechaNacimiento; 
+    private LocalDate fechaNacimiento;
     private String saludo;
     private boolean isPremium;
     private List<Contacto> contactos;
 
-    public Usuario(int id, String nombre, String movil, String contrasena, String imagen, LocalDate fechaNacimiento, String saludo, List<Contacto> contactos,  boolean isPremium) {
+    public Usuario(int id, String nombre, String movil, String contrasena, String imagen, LocalDate fechaNacimiento, String saludo, List<Contacto> contactos, boolean isPremium) {
         this.id = id;
         this.nombre = nombre;
+        this.email = null; // Email no asignado en este constructor
         this.movil = movil;
         this.contrasena = contrasena;
         this.imagen = imagen;
@@ -27,11 +30,16 @@ public class Usuario {
         this.isPremium = isPremium;
     }
 
-    public Usuario(String nombre, String movil, String contrasena, String imagen, boolean isPremium) {
+    public Usuario(String nombre, String email, LocalDate fechaNacimiento, String movil, String contrasena, String imagen, String saludo, boolean isPremium) {
+        this.id = 0;
         this.nombre = nombre;
+        this.email = email;
         this.movil = movil;
         this.contrasena = contrasena;
         this.imagen = imagen;
+        this.fechaNacimiento = fechaNacimiento;
+        this.saludo = saludo;
+        this.contactos = new LinkedList<>();
         this.isPremium = isPremium;
     }
 
@@ -46,13 +54,21 @@ public class Usuario {
     }
 
     public String getNombre() {
-         return nombre;
+        return nombre;
     }
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
-    
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getMovil() {
         return movil;
     }
@@ -80,7 +96,7 @@ public class Usuario {
     public boolean isPremium() {
         return isPremium;
     }
-    
+
     public void setPremium(boolean isPremium) {
         this.isPremium = isPremium;
     }
@@ -93,7 +109,7 @@ public class Usuario {
         this.fechaNacimiento = fechaNacimiento;
     }
 
-    public String getSaludo(){
+    public String getSaludo() {
         return this.saludo;
     }
 
