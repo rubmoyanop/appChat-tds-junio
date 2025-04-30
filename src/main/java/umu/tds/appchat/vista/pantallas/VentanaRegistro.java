@@ -3,10 +3,10 @@ package umu.tds.appchat.vista.pantallas;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
 import com.toedter.calendar.JDateChooser;
 
+import umu.tds.appchat.controlador.AppChat; // Importar el controlador
+import umu.tds.appchat.dao.DAOExcepcion; // Importar la excepción DAO
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
@@ -16,7 +16,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.Date;
 
 /**
@@ -203,10 +202,45 @@ public class VentanaRegistro implements Ventana {
         btnRegistrar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (validarFormulario()) {
-                    // Aquí iría la lógica de registro
-                    JOptionPane.showMessageDialog(frame, 
-                            "Formulario validado correctamente.\nLa función de registro está en desarrollo.",
-                            "Información", JOptionPane.INFORMATION_MESSAGE);
+                    // Extraer datos del formulario
+                    String nombre = txtNombre.getText().trim();
+                    String email = txtEmail.getText().trim();
+                    String telefono = txtTelefono.getText().trim();
+                    String contrasena = new String(txtContrasena.getPassword());
+                    String confirmarContrasena = new String(txtConfirmarContrasena.getPassword());
+                    Date fechaNacimiento = dateChooser.getDate();
+                    String saludo = txtSaludo.getText().trim();
+
+                    try {
+                        // Llamar al controlador para registrar el usuario
+                        boolean registroExitoso = AppChat.INSTANCE.registrarUsuario(
+                                nombre, email, fechaNacimiento, telefono, contrasena,
+                                confirmarContrasena, rutaImagen, saludo, false); 
+
+                        if (registroExitoso) {
+                            // Mostrar mensaje de éxito
+                            JOptionPane.showMessageDialog(frame,
+                                    "Usuario registrado correctamente.",
+                                    "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
+                            // Volver a la ventana de login
+                            GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.LOGIN);
+                        } else {
+                            // Mostrar error específico si el móvil ya existe
+                            mostrarError("El número de teléfono ya está registrado.");
+                        }
+
+                    } catch (IllegalArgumentException ex) {
+                        // Mostrar error de validación de datos de entrada
+                        mostrarError(ex.getMessage());
+                    } catch (DAOExcepcion ex) {
+                        // Mostrar error de persistencia
+                        mostrarError("Error al guardar los datos: " + ex.getMessage());
+                        ex.printStackTrace(); // Para depuración
+                    } catch (Exception ex) {
+                        // Capturar cualquier otro error inesperado
+                        mostrarError("Ocurrió un error inesperado durante el registro: " + ex.getMessage());
+                        ex.printStackTrace(); // Para depuración
+                    }
                 }
             }
         });
