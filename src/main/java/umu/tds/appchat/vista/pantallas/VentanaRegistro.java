@@ -5,8 +5,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import com.toedter.calendar.JDateChooser;
 
-import umu.tds.appchat.controlador.AppChat; // Importar el controlador
-import umu.tds.appchat.dao.DAOExcepcion; // Importar la excepción DAO
+import umu.tds.appchat.controlador.AppChat; 
+import umu.tds.appchat.dao.DAOExcepcion; 
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
