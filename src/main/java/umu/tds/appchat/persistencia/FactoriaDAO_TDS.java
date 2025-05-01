@@ -3,7 +3,6 @@ package umu.tds.appchat.persistencia;
 import java.util.List;
 
 import umu.tds.appchat.dao.*;
-import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.modelo.Mensaje;
 
@@ -16,7 +15,7 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
      * Constructor
      */
     public FactoriaDAO_TDS() {
-        // Más adelante se inicizalizará la conexión al servicio de persistencia TDS
+        
     }
 
     @Override
@@ -38,13 +37,6 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
     public MensajeDAO getMensajeDAO() {
        return new MensajeDAO_TDS(); 
     }
-}
-
-class ContactoIndividualDAO_TDS implements ContactoIndividualDAO {
-    @Override public void registrarContactoIndividual(ContactoIndividual contacto) throws DAOExcepcion {}
-    @Override public ContactoIndividual recuperarContactoIndividual(int id) throws DAOExcepcion { return null; }
-    @Override public void modificarContactoIndividual(ContactoIndividual contacto) throws DAOExcepcion {}
-    @Override public void borrarContactoIndividual(ContactoIndividual contacto) throws DAOExcepcion {}
 }
 
 class GrupoDAO_TDS implements GrupoDAO {

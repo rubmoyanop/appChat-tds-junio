@@ -19,6 +19,7 @@ public abstract class Contacto {
     public List<Mensaje> getMensajes() { return mensajes; }
     public void setMensajes(List<Mensaje> mensajes) { this.mensajes = mensajes; }
     public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 }
