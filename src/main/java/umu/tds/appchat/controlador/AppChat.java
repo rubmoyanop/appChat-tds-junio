@@ -2,6 +2,7 @@ package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
 import java.util.Date;
+import java.util.List;
 
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
@@ -100,4 +101,37 @@ public enum AppChat {
        }
        return false;
    }
+
+   public boolean agregarContactoIndividual(String nombre, String movil) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para agregar contactos.");
+        }
+        if(nombre == null || nombre.isBlank() || movil == null || movil.isBlank()) {
+            throw new IllegalArgumentException("Los campos de nombre y móvil son obligatorios.");
+        }
+
+        //Comprobamos que el usuario esté registrado
+        Usuario nuevoUsuarioContacto = usuarioDAO.recuperarUsuarioPorMovil(movil);
+        if (nuevoUsuarioContacto == null) {
+            return false; 
+        }
+
+        //Comprobamos que el contacto no esté ya agregado en contactos del usuario actual
+        if(usuarioActual.buscarContactoIndividualPorMovil(movil) != null) {
+            throw new IllegalArgumentException("Ya tienes este contacto agregado.");
+        }
+
+        ContactoIndividual contacto = new ContactoIndividual(nombre, nuevoUsuarioContacto);
+
+        // Registrar el nuevo contacto individual en la persistencia
+        contactoIndividualDAO.registrarContactoIndividual(contacto);
+
+        // Agregamos el contacto a la lista de contactos del usuario actual en memoria
+        usuarioActual.agregarContacto(contacto);
+
+        // Actualizar el usuario actual en la persistencia para guardar la nueva relación de contacto
+        usuarioDAO.modificarUsuario(usuarioActual);
+
+        return true;
+    }
 }

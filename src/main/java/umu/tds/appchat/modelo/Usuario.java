@@ -111,4 +111,27 @@ public class Usuario {
     public void setContactos(List<Contacto> contactos) {
         this.contactos = contactos;
     }
+
+    /**
+     * Busca un ContactoIndividual en la lista de contactos por su número de móvil.
+     * @param movil El número de móvil del contacto a buscar.
+     * @return El objeto Usuario asociado al ContactoIndividual si se encuentra, null en caso contrario.
+     */
+    public Usuario buscarContactoIndividualPorMovil(String movil) {
+        for (Contacto contacto : contactos) {
+            if (contacto instanceof ContactoIndividual) { //Filtramos solo los ContactoIndividual
+                ContactoIndividual contactoIndividual = (ContactoIndividual) contacto;
+                if (contactoIndividual.getUsuario().getMovil().equals(movil)) {
+                    return contactoIndividual.getUsuario();
+                }
+            }
+        }
+        return null; // No se encontró el contacto individual con ese móvil
+    }
+
+    public void agregarContacto(Contacto contacto) {
+        if (contacto != null) {
+            contactos.add(contacto);
+        }
+    }
 }
