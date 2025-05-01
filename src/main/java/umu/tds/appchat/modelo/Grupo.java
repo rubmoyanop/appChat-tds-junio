@@ -5,7 +5,7 @@ public class Grupo extends Contacto{
     private List<ContactoIndividual> miembros;
 
     public Grupo(List<ContactoIndividual> miembros) {
-        super(null); // Llamada al constructor de la clase padre Contacto
+        super(0, null, null); 
         this.miembros = miembros;
     }
 

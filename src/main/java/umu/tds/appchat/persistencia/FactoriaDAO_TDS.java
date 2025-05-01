@@ -6,7 +6,6 @@ import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.modelo.Mensaje;
-import umu.tds.appchat.modelo.Usuario;
 
 /**
  * Implementación concreta de FactoriaDAO para el servicio de persistencia TDS.
@@ -39,17 +38,6 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
     public MensajeDAO getMensajeDAO() {
        return new MensajeDAO_TDS(); 
     }
-}
-
-// Estas clases se implementarán completamente en issues posteriores. Se deja así para que compile de momento.
-
-class UsuarioDAO_TDS implements UsuarioDAO {
-    @Override public void registrarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public Usuario recuperarUsuario(int id) throws DAOExcepcion { /* Implementación futura */ return null;}
-    @Override public Usuario recuperarUsuarioPorMovil(String movil) throws DAOExcepcion { /* Implementación futura */ return null; }
-    @Override public void modificarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public void borrarUsuario(Usuario usuario) throws DAOExcepcion { /* Implementación futura */ }
-    @Override public List<Usuario> recuperarTodosUsuarios() throws DAOExcepcion { /* Implementación futura */ return java.util.Collections.emptyList();}
 }
 
 class ContactoIndividualDAO_TDS implements ContactoIndividualDAO {
