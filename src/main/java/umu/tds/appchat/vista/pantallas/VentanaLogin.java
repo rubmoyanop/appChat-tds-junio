@@ -140,13 +140,8 @@ public class VentanaLogin implements Ventana {
 
                 if (loginExitoso) {
                     // Login correcto
-                    JOptionPane.showMessageDialog(frame,
-                            "Inicio de sesión exitoso.",
-                            "Bienvenido", JOptionPane.INFORMATION_MESSAGE);
-                    // TODO: Navegar a la ventana principal de la aplicación cuando esté implementada
-                    // GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.PRINCIPAL);
-                    // Por ahora, podríamos volver a la bienvenida o cerrar esta ventana
-                    GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.BIENVENIDA); // O cerrar frame.dispose();
+                    // Navegar a la ventana principal de la aplicación
+                    GestorVentanas.INSTANCIA.mostrarVentana(TipoVentana.PRINCIPAL);
                 } else {
                     // Login incorrecto
                     JOptionPane.showMessageDialog(frame,
