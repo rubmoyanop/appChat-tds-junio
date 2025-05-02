@@ -29,7 +29,7 @@ public class VentanaPrincipal implements Ventana {
     private void initialize() {
         frame = new JFrame("AppChat - Principal");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600); 
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
 
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -57,8 +57,8 @@ public class VentanaPrincipal implements Ventana {
         ));
 
         // Botones a la izquierda
-        JButton btnAddContacto = new JButton("+C");
-        JButton btnAddGrupo = new JButton("+G");
+        JButton btnAddContacto = new JButton("Agregar nuevo contacto");
+        JButton btnAddGrupo = new JButton("Crear nuevo grupo");
         JButton btnVerContactos = new JButton("Ver Contactos");
         JButton btnPremium = new JButton("Premium");
         JButton btnBuscarMensajes = new JButton("Buscar Mensajes");
@@ -134,7 +134,6 @@ public class VentanaPrincipal implements Ventana {
             lblFotoUsuario.setText("Foto"); // Consistent placeholder
             lblFotoUsuario.setIcon(null);
         }
-        frame.setLocationRelativeTo(null); // Centrar al mostrar
     }
 
     @Override
