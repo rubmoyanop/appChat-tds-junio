@@ -29,7 +29,7 @@ public class VentanaPrincipal implements Ventana {
     private void initialize() {
         frame = new JFrame("AppChat - Principal");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.WHITE);
@@ -39,11 +39,39 @@ public class VentanaPrincipal implements Ventana {
         JPanel headerPanel = createHeaderPanel();
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // Panel central (para contenido futuro, como lista de chats, mensajes, etc.)
-        JPanel centerPanel = new JPanel();
-        centerPanel.setBackground(new Color(230, 230, 230)); // Un color de fondo diferente
-        centerPanel.add(new JLabel("Contenido principal de la aplicación irá aquí"));
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
+        // Crear el panel de la izquierda (Contactos)
+        JPanel contactosPanel = new JPanel(new BorderLayout());
+        contactosPanel.setBackground(new Color(245, 245, 245));
+        JLabel lblContactosTitle = new JLabel("Contactos");
+        lblContactosTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        lblContactosTitle.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
+            new EmptyBorder(5, 10, 5, 10)
+        ));
+        lblContactosTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        contactosPanel.add(lblContactosTitle, BorderLayout.NORTH);
+        // TODO:  Aquí iría la lista de contactos
+
+        // Crear el panel de la derecha (Mensajes)
+        JPanel mensajesPanel = new JPanel(new BorderLayout());
+        mensajesPanel.setBackground(Color.WHITE);
+        JLabel lblMensajesTitle = new JLabel("Mensajes");
+        lblMensajesTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        lblMensajesTitle.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
+            new EmptyBorder(5, 10, 5, 10)
+        ));
+        lblMensajesTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        mensajesPanel.add(lblMensajesTitle, BorderLayout.NORTH);
+        // TODO: Aquí iría la visualización y el envío de mensajes
+
+        // Crear el JSplitPane para dividir los dos paneles
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contactosPanel, mensajesPanel);
+        splitPane.setResizeWeight(0.25);
+        splitPane.setEnabled(false);
+        splitPane.setBorder(null);
+
+        mainPanel.add(splitPane, BorderLayout.CENTER);
     }
 
     private JPanel createHeaderPanel() {
