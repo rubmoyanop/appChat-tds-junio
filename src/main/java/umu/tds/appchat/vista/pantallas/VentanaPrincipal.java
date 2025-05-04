@@ -198,6 +198,20 @@ public class VentanaPrincipal implements Ventana {
                 return;
             }
 
+            try {
+                boolean exito = AppChat.INSTANCE.agregarContactoIndividual(nombre, telefono);
+                if (exito) {
+                    JOptionPane.showMessageDialog(dialogo, "Contacto agregado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    dialogo.dispose();
+                    actualizarListaContactos();
+                } else {
+                    JOptionPane.showMessageDialog(dialogo, "No existe ningún usuario registrado con ese teléfono.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(dialogo, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, "Error inesperado al agregar contacto.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         buttonPanel.add(btnCancelar);
@@ -206,6 +220,13 @@ public class VentanaPrincipal implements Ventana {
         dialogo.add(formPanel, BorderLayout.CENTER);
         dialogo.add(buttonPanel, BorderLayout.SOUTH);
         dialogo.setVisible(true);
+    }
+
+    /**
+     * Actualiza la lista de contactos en la interfaz.
+     */
+    private void actualizarListaContactos() {
+        // TODO: Implementar la lógica para actualizar la lista de contactos en el siguiente issue
     }
 
     @Override
