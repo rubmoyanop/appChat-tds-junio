@@ -13,6 +13,10 @@ public class ContactoIndividual extends Contacto{
         this.usuario = usuario;
     }
 
+    public String getMovil() {
+        return this.usuario.getMovil();
+    }
+
     public Usuario getUsuario() {
         return this.usuario;
     }

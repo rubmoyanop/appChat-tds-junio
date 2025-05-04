@@ -1,6 +1,7 @@
 package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
+import java.time.LocalDateTime;
 import java.util.Date;
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
@@ -132,6 +133,39 @@ public enum AppChat {
         usuarioDAO.modificarUsuario(usuarioActual);
 
         return true;
+    }
+
+    public void enviarMensaje(ContactoIndividual contactoDestino, String texto) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para enviar mensajes.");
+        }
+        if (contactoDestino == null || texto == null || texto.isBlank()) {
+            throw new IllegalArgumentException("Contacto y texto son obligatorios.");
+        }
+
+        // 1. Crear y enviar mensaje ENVIADO
+        Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+        contactoDestino.agregarMensaje(msgEnviado);
+        mensajeDAO.registrarMensaje(msgEnviado);
+        contactoIndividualDAO.modificarContactoIndividual(contactoDestino);
+
+        // 2. Simular recepción en el otro usuario
+        Usuario receptor = usuarioDAO.recuperarUsuarioPorMovil(
+            contactoDestino.getMovil()
+        );
+        if (receptor != null) {
+            ContactoIndividual contactoReceptor = receptor.buscarContactoIndividualPorMovil(usuarioActual.getMovil());
+            if (contactoReceptor == null) {
+                contactoReceptor = new ContactoIndividual("", usuarioActual);
+                contactoIndividualDAO.registrarContactoIndividual(contactoReceptor);
+                receptor.agregarContacto(contactoReceptor);
+                usuarioDAO.modificarUsuario(receptor);
+            }
+            Mensaje msgRecibido = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.RECIBIDO);
+            contactoReceptor.agregarMensaje(msgRecibido);
+            mensajeDAO.registrarMensaje(msgRecibido);
+            contactoIndividualDAO.modificarContactoIndividual(contactoReceptor);
+        }
     }
 
    /**
