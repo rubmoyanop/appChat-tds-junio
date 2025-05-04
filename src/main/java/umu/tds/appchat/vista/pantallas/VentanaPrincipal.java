@@ -2,8 +2,8 @@ package umu.tds.appchat.vista.pantallas;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 import umu.tds.appchat.controlador.AppChat;
+import umu.tds.appchat.modelo.Contacto;        
 import umu.tds.appchat.modelo.Usuario;
 import umu.tds.appchat.vista.componentes.PanelContactos;
 import umu.tds.appchat.vista.componentes.PanelMensajes;
@@ -25,6 +25,7 @@ public class VentanaPrincipal implements Ventana {
     private JLabel lblFotoUsuario;
     private PanelContactos panelContactos;
     private PanelMensajes panelMensajes;
+    private Contacto contactoSeleccionado;  
 
     public VentanaPrincipal() {
         initialize();
@@ -56,6 +57,15 @@ public class VentanaPrincipal implements Ventana {
         splitPane.setBorder(null);
 
         mainPanel.add(splitPane, BorderLayout.CENTER);
+
+        // Al cambiar selección, limpiar y cargar chat del contacto
+        panelContactos.getContactosList().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Contacto c = panelContactos.getContactosList().getSelectedValue();
+                this.contactoSeleccionado = c;
+                mostrarMensajesDeContacto();
+            }
+        });
     }
 
     private JPanel createHeaderPanel() {
@@ -230,5 +240,12 @@ public class VentanaPrincipal implements Ventana {
     @Override
     public TipoVentana getTipo() {
         return TipoVentana.PRINCIPAL;
+    }
+
+    private void mostrarMensajesDeContacto() {
+        panelMensajes.clearMensajes();
+        if (contactoSeleccionado != null) {
+            panelMensajes.addMensajesContacto(contactoSeleccionado);
+        }
     }
 }

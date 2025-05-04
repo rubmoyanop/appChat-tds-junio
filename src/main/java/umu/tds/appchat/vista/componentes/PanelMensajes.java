@@ -9,6 +9,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import tds.BubbleText;
 import umu.tds.appchat.vista.listeners.EmojiSelectionListener;
+import umu.tds.appchat.modelo.Contacto;
+import umu.tds.appchat.modelo.Mensaje;
+import umu.tds.appchat.modelo.TipoMensaje;
 
 /**
  * Panel que muestra el área de mensajes y el área de envío.
@@ -152,6 +155,33 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
             chatPanel.repaint();
             // Desplaza el scroll al final tras añadir el mensaje
             scrollToBottom();
+        });
+    }
+
+    /**
+     * Limpia todas las burbujas del chat.
+     */
+    public void clearMensajes() {
+        SwingUtilities.invokeLater(() -> {
+            chatPanel.removeAll();
+            chatPanel.revalidate();
+            chatPanel.repaint();
+        });
+    }
+
+    /**
+     * Carga y muestra en el chat todos los mensajes de un contacto.
+     * @param contacto El contacto cuyos mensajes se van a cargar.
+     */
+    public void addMensajesContacto(Contacto contacto) {
+        SwingUtilities.invokeLater(() -> {
+            for (Mensaje m : contacto.getMensajes()) {
+                if (m.getTipo() == TipoMensaje.ENVIADO) {
+                    addMessageBubble(m.getTexto(), Color.GREEN, "Yo", BubbleText.SENT);
+                } else {
+                    addMessageBubble(m.getTexto(), Color.LIGHT_GRAY, contacto.getNombre(), BubbleText.RECEIVED);
+                }
+            }
         });
     }
 
