@@ -4,12 +4,17 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import umu.tds.appchat.modelo.Contacto;
+import umu.tds.appchat.modelo.Mensaje;
+import java.time.format.DateTimeFormatter;
 
 public class ContactoListCellRenderer extends JPanel implements ListCellRenderer<Contacto> {
     private JLabel lblFoto;
     private JLabel lblNombre;
     private JLabel lblUltimoMensaje;
     private JLabel lblHora;
+
+    // formateador de hora
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public ContactoListCellRenderer() {
         setLayout(new BorderLayout(8, 0));
@@ -27,14 +32,14 @@ public class ContactoListCellRenderer extends JPanel implements ListCellRenderer
         lblNombre = new JLabel();
         lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
 
-        lblUltimoMensaje = new JLabel("Último mensaje..."); // Placeholder
+        lblUltimoMensaje = new JLabel();
         lblUltimoMensaje.setFont(new Font("Arial", Font.PLAIN, 12));
         lblUltimoMensaje.setForeground(Color.GRAY);
 
         centerPanel.add(lblNombre, BorderLayout.NORTH);
         centerPanel.add(lblUltimoMensaje, BorderLayout.CENTER);
 
-        lblHora = new JLabel("00:00"); // Placeholder
+        lblHora = new JLabel();
         lblHora.setFont(new Font("Arial", Font.PLAIN, 11));
         lblHora.setForeground(Color.GRAY);
 
@@ -44,17 +49,23 @@ public class ContactoListCellRenderer extends JPanel implements ListCellRenderer
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends Contacto> list, Contacto value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends Contacto> list, Contacto contacto, int index, boolean isSelected, boolean cellHasFocus) {
         // Imagen de usuario (placeholder)
         lblFoto.setText("F");
         lblFoto.setIcon(null);
 
         // Nombre
-        lblNombre.setText(value.getNombre());
+        lblNombre.setText(contacto.getNombre());
 
-        // Placeholder para último mensaje y hora
-        lblUltimoMensaje.setText("Último mensaje...");
-        lblHora.setText("00:00");
+        // Obtenemos el último mensaje para sacar los atributos de texto y hora 
+        Mensaje ultimo = contacto.getUltimoMensaje();
+        if (ultimo != null) {
+            lblUltimoMensaje.setText(ultimo.getTexto());
+            lblHora.setText(ultimo.getFechaHora().format(TIME_FORMATTER));
+        } else {
+            lblUltimoMensaje.setText("Sin mensajes");
+            lblHora.setText("");
+        }
 
         if (isSelected) {
             setBackground(new Color(220, 235, 252));

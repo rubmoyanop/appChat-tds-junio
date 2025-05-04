@@ -1,6 +1,7 @@
 package umu.tds.appchat.modelo;
 
 import java.util.List;
+import java.util.Collections;
 import java.util.LinkedList;
 
 public abstract class Contacto {
@@ -20,7 +21,14 @@ public abstract class Contacto {
     }
 
     public List<Mensaje> getMensajes() {
-        return mensajes;
+        return Collections.unmodifiableList(mensajes);
+    }
+
+    public Mensaje getUltimoMensaje() {
+        if (mensajes.isEmpty()) {
+            return null;
+        }
+        return mensajes.get(mensajes.size() - 1);
     }
 
     public void setMensajes(List<Mensaje> mensajes) {
