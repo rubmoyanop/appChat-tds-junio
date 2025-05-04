@@ -2,8 +2,6 @@ package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
 import java.util.Date;
-import java.util.List;
-
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -99,6 +97,7 @@ public enum AppChat {
        } catch (DAOExcepcion e) {
            e.printStackTrace();
        }
+       this.usuarioActual = null;
        return false;
    }
 
@@ -134,4 +133,19 @@ public enum AppChat {
 
         return true;
     }
+
+   /**
+    * Obtiene el usuario que ha iniciado sesión actualmente.
+    * @return El Usuario actual, o null si nadie ha iniciado sesión.
+    */
+   public Usuario getUsuarioActual() {
+       return usuarioActual;
+   }
+
+   /**
+    * Cierra la sesión del usuario actual.
+    */
+   public void logout() {
+       this.usuarioActual = null;
+   }
 }

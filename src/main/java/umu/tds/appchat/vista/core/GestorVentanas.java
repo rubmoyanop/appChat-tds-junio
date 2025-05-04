@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.swing.*;
 import umu.tds.appchat.vista.pantallas.VentanaBienvenida;
 import umu.tds.appchat.vista.pantallas.VentanaLogin;
+import umu.tds.appchat.vista.pantallas.VentanaPrincipal; 
 import umu.tds.appchat.vista.pantallas.VentanaRegistro;
 
 public enum GestorVentanas {
@@ -23,6 +24,7 @@ public enum GestorVentanas {
         registrarVentana(new VentanaBienvenida());
         registrarVentana(new VentanaLogin());
         registrarVentana(new VentanaRegistro());
+        registrarVentana(new VentanaPrincipal()); 
         
         // Mostrar la ventana inicial
         mostrarVentana(TipoVentana.BIENVENIDA);
@@ -40,47 +42,62 @@ public enum GestorVentanas {
             throw new IllegalArgumentException("La ventana solicitada no está registrada: " + tipo);
         }
         
-        // Caso especial para LOGIN y REGISTRO (mostrar encima de BIENVENIDA)
-        if (tipo == TipoVentana.LOGIN || tipo == TipoVentana.REGISTRO) {
-            // Si estamos en LOGIN y queremos ir a REGISTRO, o viceversa, 
-            // ocultar la ventana actual
-            if (ventanaActual != null && 
-                (ventanaActual.getTipo() == TipoVentana.LOGIN || 
-                 ventanaActual.getTipo() == TipoVentana.REGISTRO)) {
+        // Ocultar la ventana actual si existe
+        if (ventanaActual != null) {
+             //Si vamos a LOGIN o REGISTRO desde BIENVENIDA, no ocultamos BIENVENIDA
+            boolean ocultarActual = !(
+                (tipo == TipoVentana.LOGIN || tipo == TipoVentana.REGISTRO) &&
+                ventanaActual.getTipo() == TipoVentana.BIENVENIDA
+            );
+             //Si vamos a PRINCIPAL desde LOGIN o REGISTRO, ocultamos la anterior
+            if (tipo == TipoVentana.PRINCIPAL && (ventanaActual.getTipo() == TipoVentana.LOGIN || ventanaActual.getTipo() == TipoVentana.REGISTRO)) {
+                 ocultarActual = true;
+            }
+             //Si vamos a LOGIN desde REGISTRO (o viceversa), ocultamos la anterior
+            if ((tipo == TipoVentana.LOGIN && ventanaActual.getTipo() == TipoVentana.REGISTRO) ||
+                (tipo == TipoVentana.REGISTRO && ventanaActual.getTipo() == TipoVentana.LOGIN)) {
+                 ocultarActual = true;
+            }
+             // Ocultar la ventana de bienvenida si vamos a la principal
+            if (tipo == TipoVentana.PRINCIPAL && ventanaActual.getTipo() == TipoVentana.BIENVENIDA) {
+                 ocultarActual = true;
+            }
+
+
+            if (ocultarActual) {
                 ventanaActual.alOcultar();
                 ventanaActual.getPanelPrincipal().setVisible(false);
             }
-            
-            // No ocultar la ventana de bienvenida, la dejamos visible de fondo
-            JFrame nuevaFrame = nuevaVentana.getPanelPrincipal();
-            nuevaVentana.alMostrar();
-            
-            // Mostrar ventana centrada en la pantalla
-            nuevaFrame.setLocationRelativeTo(null);
-            nuevaFrame.setVisible(true);
-            
-            // Definimos la ventana actual como la nueva ventana
-            ventanaActual = nuevaVentana;
-        } else {
-            // Para el resto de ventanas, comportamiento normal
-            if (ventanaActual != null) {
-                ventanaActual.alOcultar();
-                ventanaActual.getPanelPrincipal().setVisible(false);
-            }
-            
-            ventanaActual = nuevaVentana;
-            ventanaActual.alMostrar();
-            JFrame frame = ventanaActual.getPanelPrincipal();
-            frame.setVisible(true);
-            
-            // Centrar en pantalla
-            frame.setLocationRelativeTo(null);
         }
+
+        // Mostrar la nueva ventana
+        ventanaActual = nuevaVentana;
+        ventanaActual.alMostrar();
+        JFrame frame = ventanaActual.getPanelPrincipal();
+
+        // Centrar y hacer visible
+        // Para LOGIN y REGISTRO, ya se centran al mostrarse como diálogos modales "flotantes"
+        // Para BIENVENIDA y PRINCIPAL, centramos aquí.
+        if (tipo == TipoVentana.BIENVENIDA || tipo == TipoVentana.PRINCIPAL) {
+             frame.setLocationRelativeTo(null); // Centrar ventanas principales
+             if (tipo == TipoVentana.BIENVENIDA) {
+                 frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Bienvenida maximizada
+             } else {
+                 frame.setSize(800, 600); // Tamaño por defecto para Principal
+             }
+        } else {
+             // Para Login y Registro, asegurarse de que estén centradas también
+             frame.setLocationRelativeTo(null);
+        }
+
+        frame.setVisible(true);
+        frame.toFront(); 
+        frame.requestFocus();
     }
     
     public Ventana getVentanaActual() {
         return ventanaActual;
     }
 }
-    
+
 
