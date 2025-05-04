@@ -12,6 +12,9 @@ import umu.tds.appchat.vista.listeners.EmojiSelectionListener;
 import umu.tds.appchat.modelo.Contacto;
 import umu.tds.appchat.modelo.Mensaje;
 import umu.tds.appchat.modelo.TipoMensaje;
+import umu.tds.appchat.controlador.AppChat;
+import umu.tds.appchat.dao.DAOExcepcion;
+import umu.tds.appchat.modelo.ContactoIndividual;
 
 /**
  * Panel que muestra el área de mensajes y el área de envío.
@@ -21,11 +24,20 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
     private JPanel chatPanel; // Panel que contiene las burbujas de mensajes
     private JTextArea messageInput; // Área de texto para escribir mensajes
     private JButton sendButton; // Botón para enviar mensajes
+    private ContactoIndividual contactoDestino; // Contacto destino para enviar mensajes
 
     public PanelMensajes() {
         super(new BorderLayout());
         System.out.println(BubbleText.getVersion());
         initialize();
+    }
+
+    /**
+     * Setter para que VentanaPrincipal informe el contacto seleccionado.
+     * @param contacto El contacto destino.
+     */
+    public void setContactoDestino(ContactoIndividual contacto) {
+        this.contactoDestino = contacto;
     }
 
     private void initialize() {
@@ -105,10 +117,25 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
         sendButton = new JButton("Enviar");
         sendButton.addActionListener(e -> {
             String text = getInputText().trim();
-            if (!text.isEmpty()) {
+            if (text.isEmpty()) return;
+
+            if (contactoDestino == null) {
+                JOptionPane.showMessageDialog(this,
+                    "Seleccione un contacto antes de enviar.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                AppChat.INSTANCE.enviarMensaje(contactoDestino, text);
                 addMessageBubble(text, Color.GREEN, "Yo", BubbleText.SENT);
                 clearInputText();
                 ajustarTamañoAreaTexto();
+            } catch (DAOExcepcion ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error enviando mensaje: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         });
         buttonPanel.add(Box.createHorizontalStrut(5)); // Espacio entre botones

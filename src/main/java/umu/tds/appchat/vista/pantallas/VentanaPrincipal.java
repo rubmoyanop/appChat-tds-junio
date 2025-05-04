@@ -10,6 +10,7 @@ import umu.tds.appchat.vista.componentes.PanelMensajes;
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
+import umu.tds.appchat.modelo.ContactoIndividual;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -244,8 +245,11 @@ public class VentanaPrincipal implements Ventana {
 
     private void mostrarMensajesDeContacto() {
         panelMensajes.clearMensajes();
-        if (contactoSeleccionado != null) {
+        if (contactoSeleccionado instanceof ContactoIndividual) {
+            panelMensajes.setContactoDestino((ContactoIndividual) contactoSeleccionado);
             panelMensajes.addMensajesContacto(contactoSeleccionado);
+        } else {
+            panelMensajes.setContactoDestino(null);
         }
     }
 }
