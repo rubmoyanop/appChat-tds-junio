@@ -2,20 +2,33 @@ package umu.tds.appchat.vista.componentes;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import tds.BubbleText;
+import umu.tds.appchat.vista.listeners.EmojiSelectionListener;
 
 /**
- * Panel que muestra el área de mensajes y envío.
+ * Panel que muestra el área de mensajes y el área de envío.
  */
-public class PanelMensajes extends JPanel {
+public class PanelMensajes extends JPanel implements EmojiSelectionListener {
+
+    private JPanel chatPanel; // Panel que contiene las burbujas de mensajes
+    private JTextArea messageInput; // Área de texto para escribir mensajes
+    private JButton sendButton; // Botón para enviar mensajes
 
     public PanelMensajes() {
         super(new BorderLayout());
+        System.out.println(BubbleText.getVersion());
         initialize();
     }
 
     private void initialize() {
         setBackground(Color.WHITE);
+
+        // Etiqueta de título
         JLabel lblMensajesTitle = new JLabel("Mensajes");
         lblMensajesTitle.setFont(new Font("Arial", Font.BOLD, 16));
         lblMensajesTitle.setBorder(BorderFactory.createCompoundBorder(
@@ -24,6 +37,184 @@ public class PanelMensajes extends JPanel {
         ));
         lblMensajesTitle.setHorizontalAlignment(SwingConstants.CENTER);
         add(lblMensajesTitle, BorderLayout.NORTH);
-        // TODO: Aquí iría la visualización y el envío de mensajes
+
+        // Panel de chat
+        chatPanel = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                return super.getPreferredSize();
+            }
+        };
+        chatPanel.setLayout(new BoxLayout(chatPanel, BoxLayout.Y_AXIS));
+        chatPanel.setBackground(Color.WHITE);
+
+        // ScrollPane para el panel de chat
+        JScrollPane scrollPane = new JScrollPane(chatPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        add(scrollPane, BorderLayout.CENTER);
+
+        // Panel de entrada de mensajes
+        JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
+        inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Relleno
+        inputPanel.setBackground(Color.WHITE);
+
+        // Área de texto para escribir mensajes
+        messageInput = new JTextArea();
+        messageInput.setLineWrap(true); // Ajuste de línea automático
+        messageInput.setWrapStyleWord(true); // No corta palabras al final de línea
+        messageInput.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        // Listener para Ctrl + Enter -> Envío Mensaje
+        messageInput.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    e.consume(); // Evita que el Enter normal inserte una nueva línea
+                    sendButton.doClick(); // Simula el clic en el botón de enviar
+                }
+            }
+        });
+
+        // Autoajuste de tamaño del área de texto
+        messageInput.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { ajustarTamañoAreaTexto(); }
+            @Override public void removeUpdate(DocumentEvent e) { ajustarTamañoAreaTexto(); }
+            @Override public void changedUpdate(DocumentEvent e) { ajustarTamañoAreaTexto(); }
+        });
+
+        // ScrollPane para el área de texto de entrada
+        JScrollPane inputScrollPane = new JScrollPane(messageInput);
+        inputScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        inputScrollPane.setPreferredSize(new Dimension(0, 30));
+        inputPanel.add(inputScrollPane, BorderLayout.CENTER);
+
+        // Panel para los botones (Enviar y Emoji)
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0)); // Alineación derecha, sin espacio extra
+        buttonPanel.setBackground(Color.WHITE);
+
+        // Crear e instanciar el EmojiPanel, pasando este panel como listener
+        EmojiPanel emojiPanel = new EmojiPanel(this);
+        buttonPanel.add(emojiPanel);
+
+        // Botón de enviar
+        sendButton = new JButton("Enviar");
+        sendButton.addActionListener(e -> {
+            String text = getInputText().trim();
+            if (!text.isEmpty()) {
+                addMessageBubble(text, Color.GREEN, "Yo", BubbleText.SENT);
+                clearInputText();
+                ajustarTamañoAreaTexto();
+            }
+        });
+        buttonPanel.add(Box.createHorizontalStrut(5)); // Espacio entre botones
+        buttonPanel.add(sendButton);
+
+        inputPanel.add(buttonPanel, BorderLayout.EAST);
+
+        add(inputPanel, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Añade una burbuja de mensaje de texto al panel de chat.
+     * @param text El texto del mensaje.
+     * @param color El color de fondo de la burbuja.
+     * @param name El nombre del remitente.
+     * @param type BubbleText.SENT o BubbleText.RECEIVED.
+     */
+    public void addMessageBubble(String text, Color color, String name, int type) {
+        SwingUtilities.invokeLater(() -> {
+            BubbleText bubble = new BubbleText(chatPanel, text, color, name, type);
+            chatPanel.add(bubble);
+            chatPanel.add(Box.createVerticalStrut(5)); // Para añadir espaciado vertical entre burbujas
+            chatPanel.revalidate();
+            chatPanel.repaint();
+            // Desplaza el scroll al final tras añadir el mensaje
+            scrollToBottom();
+        });
+    }
+
+    /**
+     * Añade una burbuja de emoji al panel de chat.
+     * @param emojiCode El código entero del emoji.
+     * @param color El color de fondo de la burbuja.
+     * @param name El nombre del remitente.
+     * @param type BubbleText.SENT o BubbleText.RECEIVED.
+     * @param fontSize El tamaño de fuente (afecta al tamaño del emoji).
+     */
+    public void addEmojiBubble(int emojiCode, Color color, String name, int type, int fontSize) {
+        SwingUtilities.invokeLater(() -> {
+            BubbleText bubble = new BubbleText(chatPanel, emojiCode, color, name, type, fontSize);
+            chatPanel.add(bubble);
+            chatPanel.add(Box.createVerticalStrut(5)); // Espaciado vertical entre burbujas
+            chatPanel.revalidate();
+            chatPanel.repaint();
+            // Desplaza el scroll al final tras añadir el mensaje
+            scrollToBottom();
+        });
+    }
+
+    /**
+     * Desplaza el panel de chat hasta el final para mostrar el último mensaje.
+     */
+    private void scrollToBottom() {
+        JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, chatPanel);
+        if (scrollPane != null) {
+            JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+            SwingUtilities.invokeLater(() -> verticalScrollBar.setValue(verticalScrollBar.getMaximum()));
+        }
+    }
+
+    /**
+     * Devuelve el texto actual del área de entrada.
+     * @return El texto escrito por el usuario.
+     */
+    public String getInputText() {
+        return messageInput.getText();
+    }
+
+    /**
+     * Limpia el área de entrada de texto.
+     */
+    public void clearInputText() {
+        messageInput.setText("");
+    }
+
+    /**
+     * Ajusta dinámicamente la altura del área de entrada de texto según el número de líneas.
+     * Limita la altura máxima.
+     */
+    private void ajustarTamañoAreaTexto() {
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, messageInput);
+            if (scrollPane == null) return;
+
+            int maxLines = 5; // Limitar a 5 líneas visibles antes de scroll
+            int lineHeight = messageInput.getFontMetrics(messageInput.getFont()).getHeight();
+            int currentLines = messageInput.getLineCount();
+
+            int desiredHeight = Math.max(1, Math.min(currentLines, maxLines)) * lineHeight;
+
+            Insets borderInsets = messageInput.getBorder().getBorderInsets(messageInput);
+            desiredHeight += borderInsets.top + borderInsets.bottom + 4; // Añadir espacio para el borde y un pequeño margen
+
+            Dimension prefSize = scrollPane.getPreferredSize();
+            if (prefSize.height != desiredHeight) {
+                scrollPane.setPreferredSize(new Dimension(prefSize.width, desiredHeight));
+                scrollPane.getParent().revalidate(); // Revalidar el contenedor padre para aplicar el cambio de tamaño
+                scrollPane.getParent().repaint(); // Repintar el contenedor padre
+            }
+        });
+    }
+
+    /**
+     * Implementación de EmojiSelectionListener.
+     * Se llama cuando se selecciona un emoji desde el EmojiPanel.
+     * @param emojiCode El código del emoji seleccionado.
+     */
+    @Override
+    public void onEmojiSeleccionado(int emojiCode) {
+        addEmojiBubble(emojiCode, Color.GREEN, "Yo", BubbleText.SENT, 16);
     }
 }
