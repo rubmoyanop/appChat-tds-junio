@@ -29,7 +29,10 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
     public UsuarioDAO_TDS() {
         servPersistencia = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
         poolUsuarios = PoolUsuarios.INSTANCE;
-        contactoIndividualDAO = new ContactoIndividualDAO_TDS();
+    }
+
+    public void setContactoIndividualDAO(ContactoIndividualDAO_TDS dao) {
+        this.contactoIndividualDAO = dao;
     }
 
     /**

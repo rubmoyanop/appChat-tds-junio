@@ -2,6 +2,8 @@ package umu.tds.appchat.persistencia;
 
 import java.util.List;
 
+import tds.driver.FactoriaServicioPersistencia;
+import tds.driver.ServicioPersistencia;
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.modelo.Mensaje;
@@ -11,21 +13,28 @@ import umu.tds.appchat.modelo.Mensaje;
  */
 public final class FactoriaDAO_TDS extends FactoriaDAO {
 
+    private UsuarioDAO_TDS usuarioDAO;
+    private ContactoIndividualDAO_TDS contactoDAO;
+
     /**
      * Constructor
      */
     public FactoriaDAO_TDS() {
-        
+        ServicioPersistencia serv = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
+        // instanciar DAOs y romper la dependencia circular
+        usuarioDAO = new UsuarioDAO_TDS();
+        contactoDAO = new ContactoIndividualDAO_TDS(serv, usuarioDAO);
+        usuarioDAO.setContactoIndividualDAO(contactoDAO);
     }
 
     @Override
     public UsuarioDAO getUsuarioDAO() {
-        return new UsuarioDAO_TDS(); 
+        return usuarioDAO;
     }
 
     @Override
     public ContactoIndividualDAO getContactoIndividualDAO() {
-       return new ContactoIndividualDAO_TDS(); 
+        return contactoDAO;
     }
 
     @Override

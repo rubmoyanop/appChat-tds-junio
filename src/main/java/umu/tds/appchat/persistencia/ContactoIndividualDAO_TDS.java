@@ -17,9 +17,18 @@ import umu.tds.appchat.modelo.Usuario;
 public class ContactoIndividualDAO_TDS implements ContactoIndividualDAO {
 
     private ServicioPersistencia servPersistencia;
-    private UsuarioDAO usuarioDAO; // Para recuperar el usuario asociado
+    private UsuarioDAO usuarioDAO;
 
-    public ContactoIndividualDAO_TDS(ServicioPersistencia servPersistencia) {
+    public ContactoIndividualDAO_TDS(ServicioPersistencia servPersistencia, UsuarioDAO usuarioDAO) {
+        this.servPersistencia = servPersistencia;
+        this.usuarioDAO = usuarioDAO;
+    }
+
+    public ContactoIndividualDAO_TDS() {
+        this(FactoriaServicioPersistencia.getInstance().getServicioPersistencia());
+    }
+
+    private ContactoIndividualDAO_TDS(ServicioPersistencia servPersistencia) {
         this.servPersistencia = servPersistencia;
         try {
              this.usuarioDAO = FactoriaDAO_TDS.getInstancia().getUsuarioDAO();
@@ -27,11 +36,6 @@ public class ContactoIndividualDAO_TDS implements ContactoIndividualDAO {
              throw new RuntimeException("No se pudo obtener UsuarioDAO en ContactoIndividualDAO_TDS", e);
         }
     }
-
-    public ContactoIndividualDAO_TDS() {
-        this(FactoriaServicioPersistencia.getInstance().getServicioPersistencia());
-    }
-
 
     /**
      * Convierte un ContactoIndividual a Entidad.
