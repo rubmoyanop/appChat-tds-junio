@@ -1,15 +1,15 @@
 package umu.tds.appchat.modelo;
 
+import java.time.LocalDateTime;
+
 public class Mensaje {
     private String texto;
-    private String hora;
-    private String emoticon;
-    private String tipo;
+    private LocalDateTime fechaHora;
+    private TipoMensaje tipo;
 
-    public Mensaje(String texto, String hora, String emoticon, String tipo) {
+    public Mensaje(String texto, LocalDateTime fechaHora, TipoMensaje tipo) {
         this.texto = texto;
-        this.hora = hora;
-        this.emoticon = emoticon;
+        this.fechaHora = fechaHora;
         this.tipo = tipo;
     }
 
@@ -17,31 +17,11 @@ public class Mensaje {
         return texto;
     }
 
-    public void setTexto(String texto) {
-        this.texto = texto;
+    public LocalDateTime getFechaHora() {
+        return fechaHora;
     }
 
-    public String getHora() {
-        return hora;
-    }
-
-    public void setHora(String hora) {
-        this.hora = hora;
-    }
-
-    public String getEmoticon() {
-        return emoticon;
-    }
-
-    public void setEmoticon(String emoticon) {
-        this.emoticon = emoticon;
-    }
-
-    public String getTipo() {
+    public TipoMensaje getTipo() {
         return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
     }
 }
