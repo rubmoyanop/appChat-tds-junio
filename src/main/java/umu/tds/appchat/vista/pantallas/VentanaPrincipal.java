@@ -91,6 +91,13 @@ public class VentanaPrincipal implements Ventana {
         JButton btnPremium = new JButton("Premium");
         JButton btnBuscarMensajes = new JButton("Buscar Mensajes");
 
+        btnAddContacto.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoAgregarContacto();
+            }
+        });
+
         headerPanel.add(btnAddContacto);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0))); 
         headerPanel.add(btnAddGrupo);
@@ -140,6 +147,65 @@ public class VentanaPrincipal implements Ventana {
         btnLogout.setToolTipText("Cerrar sesión");
 
         return headerPanel;
+    }
+
+    private void mostrarDialogoAgregarContacto() {
+        JDialog dialogo = new JDialog(frame, "Agregar Nuevo Contacto", true);
+        dialogo.setSize(350, 200);
+        dialogo.setLocationRelativeTo(frame); // Center relative to the main window
+        dialogo.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("Nombre:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        JTextField txtNombreContacto = new JTextField();
+        formPanel.add(txtNombreContacto, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.0;
+        formPanel.add(new JLabel("Teléfono:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        JTextField txtTelefonoContacto = new JTextField();
+        formPanel.add(txtTelefonoContacto, gbc);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnCancelar = new JButton("Cancelar");
+        JButton btnAceptar = new JButton("Aceptar");
+
+        btnCancelar.addActionListener(ev -> dialogo.dispose()); 
+
+        btnAceptar.addActionListener(ev -> {
+            String nombre = txtNombreContacto.getText().trim();
+            String telefono = txtTelefonoContacto.getText().trim();
+
+            if (nombre.isEmpty() || telefono.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogo, "Nombre y Teléfono son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+        });
+
+        buttonPanel.add(btnCancelar);
+        buttonPanel.add(btnAceptar);
+
+        dialogo.add(formPanel, BorderLayout.CENTER);
+        dialogo.add(buttonPanel, BorderLayout.SOUTH);
+        dialogo.setVisible(true);
     }
 
     @Override
