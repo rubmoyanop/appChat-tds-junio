@@ -4,7 +4,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import umu.tds.appchat.controlador.AppChat;
+import umu.tds.appchat.modelo.Contacto;
 import umu.tds.appchat.modelo.Usuario;
+import umu.tds.appchat.vista.componentes.ContactoListCellRenderer;
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
@@ -12,6 +14,10 @@ import umu.tds.appchat.vista.core.Ventana;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.ListSelectionModel;
 
 /**
  * Ventana principal de la aplicación después del login.
@@ -21,6 +27,8 @@ public class VentanaPrincipal implements Ventana {
     private JPanel mainPanel;
     private JLabel lblNombreUsuario;
     private JLabel lblFotoUsuario; 
+    private DefaultListModel<Contacto> contactosListModel;
+    private JList<Contacto> contactosList;
 
     public VentanaPrincipal() {
         initialize();
@@ -50,7 +58,14 @@ public class VentanaPrincipal implements Ventana {
         ));
         lblContactosTitle.setHorizontalAlignment(SwingConstants.CENTER);
         contactosPanel.add(lblContactosTitle, BorderLayout.NORTH);
-        // TODO:  Aquí iría la lista de contactos
+
+        // Panel de lista de contactos/chats
+        contactosListModel = new DefaultListModel<>();
+        contactosList = new JList<>(contactosListModel);
+        contactosList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        contactosList.setCellRenderer(new ContactoListCellRenderer());
+        JScrollPane contactosScrollPane = new JScrollPane(contactosList);
+        contactosPanel.add(contactosScrollPane, BorderLayout.CENTER);
 
         // Crear el panel de la derecha (Mensajes)
         JPanel mensajesPanel = new JPanel(new BorderLayout());
@@ -226,7 +241,14 @@ public class VentanaPrincipal implements Ventana {
      * Actualiza la lista de contactos en la interfaz.
      */
     private void actualizarListaContactos() {
-        // TODO: Implementar la lógica para actualizar la lista de contactos en el siguiente issue
+        contactosListModel.clear();
+        Usuario usuario = AppChat.INSTANCE.getUsuarioActual();
+        if (usuario != null) {
+            List<Contacto> contactos = usuario.getContactos(); 
+            for (Contacto c : contactos) {
+                contactosListModel.addElement(c);
+            }
+        }
     }
 
     @Override
@@ -237,18 +259,18 @@ public class VentanaPrincipal implements Ventana {
     @Override
     public void alMostrar() {
         // Actualizar datos del usuario cuando la ventana se muestra
-        Usuario usuario = AppChat.INSTANCE.getUsuarioActual(); // Necesitarás este método en AppChat
+        Usuario usuario = AppChat.INSTANCE.getUsuarioActual(); 
         if (usuario != null) {
             lblNombreUsuario.setText(usuario.getNombre());
-            // Simply set the text for the photo placeholder
             lblFotoUsuario.setText("Foto");
-            lblFotoUsuario.setIcon(null); // Ensure no icon is displayed
+            lblFotoUsuario.setIcon(null); 
         } else {
-            // Manejar caso donde no hay usuario (aunque no debería pasar si se llega desde login)
-            lblNombreUsuario.setText("Usuario Desconocido"); // Corrected placeholder text
-            lblFotoUsuario.setText("Foto"); // Consistent placeholder
+            // Manejar caso donde no hay usuario actual
+            lblNombreUsuario.setText("Usuario Desconocido"); 
+            lblFotoUsuario.setText("Foto"); 
             lblFotoUsuario.setIcon(null);
         }
+        actualizarListaContactos();
     }
 
     @Override
