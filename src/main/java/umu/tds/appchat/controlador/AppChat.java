@@ -20,6 +20,7 @@ public enum AppChat {
     try {
         factoriaDAO = FactoriaDAO.getInstancia(DAO_TDS);
         this.usuarioDAO = factoriaDAO.getUsuarioDAO();
+        this.contactoIndividualDAO = factoriaDAO.getContactoIndividualDAO();
     } 
     catch (DAOExcepcion e) {
         e.printStackTrace();
@@ -27,7 +28,6 @@ public enum AppChat {
         System.exit(1); 
     }
     
-    contactoIndividualDAO = factoriaDAO.getContactoIndividualDAO();
     grupoDAO = factoriaDAO.getGrupoDAO();
     mensajeDAO = factoriaDAO.getMensajeDAO();
    }
