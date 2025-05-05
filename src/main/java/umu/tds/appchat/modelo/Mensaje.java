@@ -3,16 +3,27 @@ package umu.tds.appchat.modelo;
 import java.time.LocalDateTime;
 
 public class Mensaje {
-    private int id; 
+    private int id;
     private String texto;
     private LocalDateTime fechaHora;
     private TipoMensaje tipo;
+    private int codigoEmoji; // Los mensajes que no son emojis tienen -1 en este campo
+
 
     public Mensaje(String texto, LocalDateTime fechaHora, TipoMensaje tipo) {
-        this.id = 0; 
+        this.id = 0;
         this.texto = texto;
         this.fechaHora = fechaHora;
         this.tipo = tipo;
+        this.codigoEmoji = -1; // Los mensajes que no son emojis tienen -1 en este campo
+    }
+
+    public Mensaje(int codigoEmoji, LocalDateTime fechaHora, TipoMensaje tipo) {
+        this.id = 0;
+        this.texto = ""; 
+        this.fechaHora = fechaHora;
+        this.tipo = tipo;
+        this.codigoEmoji = codigoEmoji;
     }
 
     public int getId() {
@@ -24,7 +35,7 @@ public class Mensaje {
     }
 
     public String getTexto() {
-        return texto;
+        return isEmoji() ? "[Emoji]" : texto;
     }
 
     public LocalDateTime getFechaHora() {
@@ -33,5 +44,13 @@ public class Mensaje {
 
     public TipoMensaje getTipo() {
         return tipo;
+    }
+
+    public int getCodigoEmoji() {
+        return codigoEmoji;
+    }
+
+    public boolean isEmoji() {
+        return codigoEmoji != -1;
     }
 }

@@ -34,10 +34,11 @@ public class MensajeDAO_TDS implements MensajeDAO {
         entidad.setNombre("Mensaje");
 
         List<Propiedad> propiedades = new LinkedList<>();
-        propiedades.add(new Propiedad("texto", mensaje.getTexto()));
+        propiedades.add(new Propiedad("texto", mensaje.isEmoji() ? "" : mensaje.getTexto())); // Store empty string for emojis
         String fechaHoraStr = mensaje.getFechaHora() != null ? mensaje.getFechaHora().format(DATE_TIME_FORMATTER) : "";
         propiedades.add(new Propiedad("fechaHora", fechaHoraStr));
-        propiedades.add(new Propiedad("tipo", mensaje.getTipo().name())); 
+        propiedades.add(new Propiedad("tipo", mensaje.getTipo().name()));
+        propiedades.add(new Propiedad("codigoEmoji", String.valueOf(mensaje.getCodigoEmoji()))); // Store emoji code
 
         entidad.setPropiedades(propiedades);
         return entidad;
@@ -65,6 +66,7 @@ public class MensajeDAO_TDS implements MensajeDAO {
         String texto = null;
         LocalDateTime fechaHora = null;
         TipoMensaje tipo = null;
+        int codigoEmoji = -1; // -1 indica que no es un emoji
 
         try {
             texto = servPersistencia.recuperarPropiedadEntidad(entidad, "texto");
@@ -86,16 +88,29 @@ public class MensajeDAO_TDS implements MensajeDAO {
                     throw new DAOExcepcion("Error parseando TipoMensaje para mensaje ID " + entidad.getId(), e);
                 }
             }
+            String codigoEmojiStr = servPersistencia.recuperarPropiedadEntidad(entidad, "codigoEmoji");
+            if (codigoEmojiStr != null && !codigoEmojiStr.isEmpty()) {
+                try {
+                    codigoEmoji = Integer.parseInt(codigoEmojiStr);
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parseando codigoEmoji para mensaje ID " + entidad.getId() + ": " + codigoEmojiStr);
+                }
+            }
 
         } catch (Exception e) {
             throw new DAOExcepcion("Error al recuperar propiedad de Entidad Mensaje con ID: " + entidad.getId(), e);
         }
 
-        if (texto == null || fechaHora == null || tipo == null) {
-             throw new DAOExcepcion("Datos incompletos al recuperar Mensaje con ID: " + entidad.getId());
+        if (fechaHora == null || tipo == null) {
+             throw new DAOExcepcion("Datos incompletos (fechaHora o tipo) al recuperar Mensaje con ID: " + entidad.getId());
         }
 
-        Mensaje mensaje = new Mensaje(texto, fechaHora, tipo);
+        Mensaje mensaje;
+        if (codigoEmoji != -1) {
+            mensaje = new Mensaje(codigoEmoji, fechaHora, tipo);
+        } else {
+            mensaje = new Mensaje(texto != null ? texto : "", fechaHora, tipo);
+        }
         mensaje.setId(entidad.getId());
 
         // Añadir al pool
@@ -147,11 +162,17 @@ public class MensajeDAO_TDS implements MensajeDAO {
             }
 
             servPersistencia.eliminarPropiedadEntidad(entidad, "texto");
-            servPersistencia.anadirPropiedadEntidad(entidad, "texto", mensaje.getTexto());
-           
+            servPersistencia.anadirPropiedadEntidad(entidad, "texto", mensaje.isEmoji() ? "" : mensaje.getTexto());
+
             servPersistencia.eliminarPropiedadEntidad(entidad, "fechaHora");
             String fechaHoraStr = mensaje.getFechaHora() != null ? mensaje.getFechaHora().format(DATE_TIME_FORMATTER) : "";
             servPersistencia.anadirPropiedadEntidad(entidad, "fechaHora", fechaHoraStr);
+
+            servPersistencia.eliminarPropiedadEntidad(entidad, "codigoEmoji");
+            servPersistencia.anadirPropiedadEntidad(entidad, "codigoEmoji", String.valueOf(mensaje.getCodigoEmoji()));
+
+            servPersistencia.eliminarPropiedadEntidad(entidad, "tipo");
+            servPersistencia.anadirPropiedadEntidad(entidad, "tipo", mensaje.getTipo().name());
 
             // Actualizar en el pool si existe
             if (poolMensajes.contains(mensaje.getId())) {
