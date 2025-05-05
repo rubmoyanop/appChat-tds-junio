@@ -167,15 +167,15 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
 
     /**
      * Añade una burbuja de emoji al panel de chat.
-     * @param emojiCode El código entero del emoji.
+     * @param codigoEmoji El código entero del emoji.
      * @param color El color de fondo de la burbuja.
      * @param name El nombre del remitente.
      * @param type BubbleText.SENT o BubbleText.RECEIVED.
      * @param fontSize El tamaño de fuente (afecta al tamaño del emoji).
      */
-    public void addEmojiBubble(int emojiCode, Color color, String name, int type, int fontSize) {
+    public void addEmojiBubble(int codigoEmoji, Color color, String name, int type, int fontSize) {
         SwingUtilities.invokeLater(() -> {
-            BubbleText bubble = new BubbleText(chatPanel, emojiCode, color, name, type, fontSize);
+            BubbleText bubble = new BubbleText(chatPanel, codigoEmoji, color, name, type, fontSize);
             chatPanel.add(bubble);
             chatPanel.add(Box.createVerticalStrut(5)); // Espaciado vertical entre burbujas
             chatPanel.revalidate();
@@ -204,11 +204,21 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
         SwingUtilities.invokeLater(() -> {
             for (Mensaje m : contacto.getMensajes()) {
                 if (m.getTipo() == TipoMensaje.ENVIADO) {
-                    addMessageBubble(m.getTexto(), Color.GREEN, "Yo", BubbleText.SENT);
-                } else {
-                    addMessageBubble(m.getTexto(), Color.LIGHT_GRAY, contacto.getNombre(), BubbleText.RECEIVED);
+                    if (m.isEmoji()) {
+                        addEmojiBubble(m.getCodigoEmoji(), Color.GREEN, "Yo", BubbleText.SENT, 16);
+                    } else {
+                        addMessageBubble(m.getTexto(), Color.GREEN, "Yo", BubbleText.SENT);
+                    }
+                } else { // RECIBIDO
+                    if (m.isEmoji()) {
+                        addEmojiBubble(m.getCodigoEmoji(), Color.LIGHT_GRAY, contacto.getNombre(), BubbleText.RECEIVED, 16);
+                    } else {
+                        addMessageBubble(m.getTexto(), Color.LIGHT_GRAY, contacto.getNombre(), BubbleText.RECEIVED);
+                    }
                 }
             }
+            // Desplaza el scroll al final tras cargar todos los mensajes
+            scrollToBottom();
         });
     }
 
@@ -268,10 +278,27 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
     /**
      * Implementación de EmojiSelectionListener.
      * Se llama cuando se selecciona un emoji desde el EmojiPanel.
-     * @param emojiCode El código del emoji seleccionado.
+     * @param codigoEmoji El código del emoji seleccionado.
      */
     @Override
-    public void onEmojiSeleccionado(int emojiCode) {
-        addEmojiBubble(emojiCode, Color.GREEN, "Yo", BubbleText.SENT, 16);
+    public void onEmojiSeleccionado(int codigoEmoji) {
+        if (contactoDestino == null) {
+            JOptionPane.showMessageDialog(this,
+                "Seleccione un contacto antes de enviar.",
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            AppChat.INSTANCE.enviarEmoji(contactoDestino, codigoEmoji);
+            addEmojiBubble(codigoEmoji, Color.GREEN, "Yo", BubbleText.SENT, 10);
+        } catch (DAOExcepcion ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error enviando emoji: " + ex.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } catch (IllegalArgumentException ex) {
+             JOptionPane.showMessageDialog(this,
+                ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
