@@ -1,4 +1,5 @@
 package umu.tds.appchat.modelo;
+import java.util.Collections;
 import java.util.List;
 
 public class Grupo extends Contacto{
@@ -14,6 +15,6 @@ public class Grupo extends Contacto{
         this.miembros = miembros;
     }
 
-    public List<ContactoIndividual> getMiembros() { return miembros; }
+    public List<ContactoIndividual> getMiembros() { return Collections.unmodifiableList(miembros); }
     public void setMiembros(List<ContactoIndividual> miembros) { this.miembros = miembros; }
 }
