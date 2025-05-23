@@ -353,6 +353,44 @@ public class VentanaPrincipal implements Ventana {
         dialogoCrearGrupo.setVisible(true);
     }
 
+    private void mostrarDialogoModificarGrupo(){
+        JDialog dialogoModificarGrupo = new JDialog(frame, "Crear Nuevo Grupo", true);
+        dialogoModificarGrupo.setSize(650, 450);
+        dialogoModificarGrupo.setLocationRelativeTo(frame);
+        dialogoModificarGrupo.setLayout(new BorderLayout(10, 10));
+
+        // Panel para las listas de contactos
+        ListaContactosPanel groupComponents = getListasContactosGrupos();
+        JPanel panelCentral = groupComponents.getPanel();
+        DefaultListModel<ContactoIndividual> listaContactosAñadidos = groupComponents.getListaContactos();
+
+        dialogoModificarGrupo.add(panelCentral, BorderLayout.CENTER);
+
+        // Botones de acción del diálogo
+        JPanel panelBotonesDialogo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotonesDialogo.setBorder(new EmptyBorder(0, 10, 10, 10));
+        JButton btnActualizar = new JButton("Actualizar");
+        JButton btnCancelar = new JButton("Cancelar");
+        panelBotonesDialogo.add(btnActualizar);
+        panelBotonesDialogo.add(btnCancelar);
+        dialogoModificarGrupo.add(panelBotonesDialogo, BorderLayout.SOUTH);
+
+        // Lógica del botón Cancelar
+        btnCancelar.addActionListener(e -> dialogoModificarGrupo.dispose());
+
+        // Lógica del botón Crear Grupo
+        btnActualizar.addActionListener(e -> {
+            if (listaContactosAñadidos.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogoModificarGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            dialogoModificarGrupo.dispose();
+        });
+
+        dialogoModificarGrupo.setVisible(true);
+    }
+
     @Override
     public JFrame getPanelPrincipal() {
         return frame;
