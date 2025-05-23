@@ -3,7 +3,6 @@ package umu.tds.appchat.persistencia;
 import tds.driver.FactoriaServicioPersistencia;
 import tds.driver.ServicioPersistencia;
 import umu.tds.appchat.dao.*;
-import umu.tds.appchat.modelo.Grupo;
 
 /**
  * Implementación concreta de FactoriaDAO para el servicio de persistencia TDS.
@@ -13,6 +12,7 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
     private UsuarioDAO_TDS usuarioDAO;
     private ContactoIndividualDAO_TDS contactoDAO;
     private MensajeDAO_TDS mensajeDAO; 
+    private GrupoDAO_TDS grupoDAO;
 
     /**
      * Constructor
@@ -37,7 +37,7 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
 
     @Override
     public GrupoDAO getGrupoDAO() {
-        return new GrupoDAO_TDS(); 
+        return grupoDAO; 
     }
 
     @Override
@@ -46,9 +46,3 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
     }
 }
 
-class GrupoDAO_TDS implements GrupoDAO {
-    @Override public void registrarGrupo(Grupo grupo) throws DAOExcepcion {}
-    @Override public Grupo recuperarGrupo(int id) throws DAOExcepcion { return null; }
-    @Override public void modificarGrupo(Grupo grupo) throws DAOExcepcion {}
-    @Override public void borrarGrupo(Grupo grupo) throws DAOExcepcion {}
-}
