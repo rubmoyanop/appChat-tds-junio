@@ -129,8 +129,19 @@ public class GrupoDAO_TDS implements GrupoDAO {
 
     @Override
     public void modificarGrupo(Grupo grupo) throws DAOExcepcion {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'modificarGrupo'");
+        try{
+            if (grupo == null) {
+                throw new DAOExcepcion("Grupo no puede ser nulo");
+            }
+            if (grupo.getId() <= 0) {
+                throw new DAOExcepcion("ID de grupo no puede ser menor o igual a cero");
+            }
+            Entidad entidad = grupoToEntidad(grupo);
+            servPersistencia.modificarEntidad(entidad);
+        }
+        catch (Exception e) {
+            throw new DAOExcepcion("Error al modificar el grupo: " + e.getMessage(), e);
+        }
     }
 
     @Override
