@@ -146,8 +146,22 @@ public class GrupoDAO_TDS implements GrupoDAO {
 
     @Override
     public void borrarGrupo(Grupo grupo) throws DAOExcepcion {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'borrarGrupo'");
+        try{
+            if (grupo == null) {
+                throw new DAOExcepcion("Grupo no puede ser nulo");
+            }
+            if (grupo.getId() <= 0) {
+                throw new DAOExcepcion("ID de grupo no puede ser menor o igual a cero");
+            }
+            Entidad entidad = servPersistencia.recuperarEntidad(grupo.getId());
+            if (entidad == null) {
+                throw new DAOExcepcion("Grupo no encontrado con ID: " + grupo.getId());
+            }
+            servPersistencia.borrarEntidad(entidad);
+        }
+        catch (Exception e) {
+            throw new DAOExcepcion("Error al borrar el grupo: " + e.getMessage(), e);
+        }
     }
 
     
