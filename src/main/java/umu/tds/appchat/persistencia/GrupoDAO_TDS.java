@@ -85,8 +85,25 @@ public class GrupoDAO_TDS implements GrupoDAO {
 
     @Override
     public void registrarGrupo(Grupo grupo) throws DAOExcepcion {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'registrarGrupo'");
+        try{
+            if (grupo == null) {
+                throw new DAOExcepcion("Grupo no puede ser nulo");
+            }
+            if (grupo.getId() != 0) {
+                Entidad existente = servPersistencia.recuperarEntidad(grupo.getId());
+                if (existente != null) {
+                    System.err.println("Advertencia: Intentando registrar un ContactoIndividual que ya existe (ID: " + grupo.getId() + "). Se procederá a modificar.");
+                    modificarGrupo(grupo);
+                    return;
+                }
+            }
+            Entidad entidad = grupoToEntidad(grupo);
+            entidad = servPersistencia.registrarEntidad(entidad);
+            grupo.setId(entidad.getId());
+        }
+        catch (Exception e) {
+            throw new DAOExcepcion("Error al registrar el grupo: " + e.getMessage(), e);
+        }
     }
 
     @Override
