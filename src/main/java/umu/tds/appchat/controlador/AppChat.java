@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.ZoneId; 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -221,6 +222,32 @@ public enum AppChat {
             contactoReceptor.agregarMensaje(msgRecibido);
             contactoIndividualDAO.modificarContactoIndividual(contactoReceptor);
         }
+    }
+
+   /**
+    * Crea un nuevo grupo y lo añade a la lista de contactos del usuario actual.
+    * @param nombre Nombre del grupo (obligatorio).
+    * @param miembros Lista de contactos individuales que serán miembros del grupo.
+    * @return true si el grupo se creó correctamente, false si el nombre es inválido o no hay usuario logueado.
+    * @throws DAOExcepcion Si ocurre un error de persistencia.
+    * @throws IllegalArgumentException Si el nombre es nulo o vacío.
+    */
+    public boolean crearGrupo(String nombre, List<ContactoIndividual> miembros) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para crear un grupo.");
+        }
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del grupo no puede estar vacío.");
+        }
+        // Crear el grupo
+        Grupo grupo = new Grupo(nombre, miembros);
+        // Persistir el grupo
+        grupoDAO.registrarGrupo(grupo);
+        // Añadir el grupo a los contactos del usuario actual
+        usuarioActual.agregarContacto(grupo);
+        // Actualizar el usuario en la persistencia
+        usuarioDAO.modificarUsuario(usuarioActual);
+        return true;
     }
 
    /**
