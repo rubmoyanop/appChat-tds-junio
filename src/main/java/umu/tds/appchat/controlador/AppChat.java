@@ -266,6 +266,13 @@ public enum AppChat {
        return usuarioActual;
    }
 
+   public List<Contacto> getContactosUsuarioActual(){
+         if (usuarioActual == null) {
+              throw new IllegalStateException("Debe iniciar sesión para obtener los contactos.");
+         }
+         return usuarioActual.getContactos();
+   }
+
    /**
     * Cierra la sesión del usuario actual.
     */

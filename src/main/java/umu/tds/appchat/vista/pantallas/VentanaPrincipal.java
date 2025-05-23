@@ -2,8 +2,9 @@ package umu.tds.appchat.vista.pantallas;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
 import umu.tds.appchat.controlador.AppChat;
-import umu.tds.appchat.modelo.Contacto;        
+import umu.tds.appchat.modelo.Contacto;
 import umu.tds.appchat.modelo.Usuario;
 import umu.tds.appchat.vista.componentes.PanelContactos;
 import umu.tds.appchat.vista.componentes.PanelMensajes;
@@ -11,10 +12,12 @@ import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 import umu.tds.appchat.modelo.ContactoIndividual;
+import umu.tds.appchat.vista.componentes.ContactoIndividualListCellRenderer;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 
 /**
  * Ventana principal de la aplicación después del login.
@@ -89,6 +92,13 @@ public class VentanaPrincipal implements Ventana {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mostrarDialogoAgregarContacto();
+            }
+        });
+
+        btnAddGrupo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoCrearGrupo();
             }
         });
 
@@ -211,6 +221,94 @@ public class VentanaPrincipal implements Ventana {
         dialogo.add(formPanel, BorderLayout.CENTER);
         dialogo.add(buttonPanel, BorderLayout.SOUTH);
         dialogo.setVisible(true);
+    }
+
+    private void mostrarDialogoCrearGrupo() {
+        JDialog dialogoCrearGrupo = new JDialog(frame, "Crear Nuevo Grupo", true);
+        dialogoCrearGrupo.setSize(650, 450);
+        dialogoCrearGrupo.setLocationRelativeTo(frame);
+        dialogoCrearGrupo.setLayout(new BorderLayout(10, 10));
+
+        // Panel para el nombre del grupo
+        JPanel panelNombreGrupo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelNombreGrupo.setBorder(new EmptyBorder(10, 10, 0, 10));
+        panelNombreGrupo.add(new JLabel("Nombre del Grupo:"));
+        JTextField txtNombreGrupo = new JTextField(20);
+        panelNombreGrupo.add(txtNombreGrupo);
+        dialogoCrearGrupo.add(panelNombreGrupo, BorderLayout.NORTH);
+
+        // Modelos para las listas
+        DefaultListModel<ContactoIndividual> availableContactsModel = new DefaultListModel<>();
+        DefaultListModel<ContactoIndividual> selectedContactsModel = new DefaultListModel<>();
+
+        Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
+        if (usuarioActual != null) {
+            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
+                if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().trim().isEmpty()) {
+                    availableContactsModel.addElement((ContactoIndividual) contacto);
+                }
+            }
+        }
+
+        // Listas
+        JList<ContactoIndividual> listAvailableContacts = new JList<>(availableContactsModel);
+        listAvailableContacts.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        listAvailableContacts.setCellRenderer(new ContactoIndividualListCellRenderer());
+        JScrollPane scrollPaneAvailable = new JScrollPane(listAvailableContacts);
+        scrollPaneAvailable.setBorder(BorderFactory.createTitledBorder("Contactos Disponibles"));
+
+        JList<ContactoIndividual> listSelectedContacts = new JList<>(selectedContactsModel);
+        listSelectedContacts.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        listSelectedContacts.setCellRenderer(new ContactoIndividualListCellRenderer());
+        JScrollPane scrollPaneSelected = new JScrollPane(listSelectedContacts);
+        scrollPaneSelected.setBorder(BorderFactory.createTitledBorder("Miembros del Grupo"));
+
+
+        // Panel central con listas y botones de transferencia
+        JPanel panelCentral = new JPanel(new GridBagLayout());
+        panelCentral.setBorder(new EmptyBorder(5, 10, 5, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.45;
+        panelCentral.add(scrollPaneAvailable, gbc);
+
+
+        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0.45; gbc.fill = GridBagConstraints.BOTH;
+        panelCentral.add(scrollPaneSelected, gbc);
+
+        dialogoCrearGrupo.add(panelCentral, BorderLayout.CENTER);
+
+        // Botones de acción del diálogo
+        JPanel panelBotonesDialogo = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotonesDialogo.setBorder(new EmptyBorder(0, 10, 10, 10));
+        JButton btnCrear = new JButton("Crear Grupo");
+        JButton btnCancelar = new JButton("Cancelar");
+        panelBotonesDialogo.add(btnCrear);
+        panelBotonesDialogo.add(btnCancelar);
+        dialogoCrearGrupo.add(panelBotonesDialogo, BorderLayout.SOUTH);
+
+
+        // Lógica del botón Cancelar
+        btnCancelar.addActionListener(e -> dialogoCrearGrupo.dispose());
+
+        // Lógica del botón Crear Grupo
+        btnCrear.addActionListener(e -> {
+            String nombreGrupo = txtNombreGrupo.getText().trim();
+            if (nombreGrupo.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogoCrearGrupo, "El nombre del grupo no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (selectedContactsModel.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogoCrearGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JOptionPane.showMessageDialog(dialogoCrearGrupo, "Grupo '" + nombreGrupo + "' creado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        dialogoCrearGrupo.setVisible(true);
     }
 
     @Override
