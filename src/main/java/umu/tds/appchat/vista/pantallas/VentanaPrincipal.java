@@ -17,7 +17,7 @@ import umu.tds.appchat.vista.componentes.ContactoIndividualListCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.util.List;
 
 /**
  * Ventana principal de la aplicación después del login.
@@ -263,6 +263,17 @@ public class VentanaPrincipal implements Ventana {
         JScrollPane scrollPaneSelected = new JScrollPane(listSelectedContacts);
         scrollPaneSelected.setBorder(BorderFactory.createTitledBorder("Miembros del Grupo"));
 
+        // Botones de transferencia
+        JButton btnMoveToSelected = new JButton(">>");
+        JButton btnMoveToAvailable = new JButton("<<");
+
+        JPanel panelBotonesTransferencia = new JPanel();
+        panelBotonesTransferencia.setLayout(new BoxLayout(panelBotonesTransferencia, BoxLayout.Y_AXIS));
+        panelBotonesTransferencia.add(Box.createVerticalGlue());
+        panelBotonesTransferencia.add(btnMoveToSelected);
+        panelBotonesTransferencia.add(Box.createRigidArea(new Dimension(0, 10)));
+        panelBotonesTransferencia.add(btnMoveToAvailable);
+        panelBotonesTransferencia.add(Box.createVerticalGlue());
 
         // Panel central con listas y botones de transferencia
         JPanel panelCentral = new JPanel(new GridBagLayout());
@@ -274,6 +285,9 @@ public class VentanaPrincipal implements Ventana {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.45;
         panelCentral.add(scrollPaneAvailable, gbc);
 
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.1; gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panelCentral.add(panelBotonesTransferencia, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0.45; gbc.fill = GridBagConstraints.BOTH;
         panelCentral.add(scrollPaneSelected, gbc);
@@ -289,6 +303,22 @@ public class VentanaPrincipal implements Ventana {
         panelBotonesDialogo.add(btnCancelar);
         dialogoCrearGrupo.add(panelBotonesDialogo, BorderLayout.SOUTH);
 
+        // Lógica de los botones de transferencia
+        btnMoveToSelected.addActionListener(e -> {
+            List<ContactoIndividual> seleccionados = listAvailableContacts.getSelectedValuesList();
+            for (ContactoIndividual c : seleccionados) {
+                selectedContactsModel.addElement(c);
+                availableContactsModel.removeElement(c);
+            }
+        });
+
+        btnMoveToAvailable.addActionListener(e -> {
+            List<ContactoIndividual> seleccionados = listSelectedContacts.getSelectedValuesList();
+            for (ContactoIndividual c : seleccionados) {
+                availableContactsModel.addElement(c);
+                selectedContactsModel.removeElement(c);
+            }
+        });
 
         // Lógica del botón Cancelar
         btnCancelar.addActionListener(e -> dialogoCrearGrupo.dispose());
@@ -304,8 +334,8 @@ public class VentanaPrincipal implements Ventana {
                 JOptionPane.showMessageDialog(dialogoCrearGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             JOptionPane.showMessageDialog(dialogoCrearGrupo, "Grupo '" + nombreGrupo + "' creado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            dialogoCrearGrupo.dispose();
         });
 
         dialogoCrearGrupo.setVisible(true);
