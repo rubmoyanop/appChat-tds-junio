@@ -108,8 +108,23 @@ public class GrupoDAO_TDS implements GrupoDAO {
 
     @Override
     public Grupo recuperarGrupo(int id) throws DAOExcepcion {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'recuperarGrupo'");
+        try{
+            if (id <= 0) {
+                throw new DAOExcepcion("ID de grupo no puede ser menor o igual a cero");
+            }
+            Entidad entidad = servPersistencia.recuperarEntidad(id);
+            if (entidad == null) {
+                throw new DAOExcepcion("Grupo no encontrado con ID: " + id);
+            }
+            Grupo grupo = entidadToGrupo(entidad);
+            if (grupo == null) {
+                throw new DAOExcepcion("Error al convertir entidad a Grupo con ID: " + id);
+            }
+            return grupo;
+        }
+        catch (Exception e) {
+            throw new DAOExcepcion("Error al recuperar el grupo con id: " + id + e.getMessage(), e);
+        }
     }
 
     @Override
