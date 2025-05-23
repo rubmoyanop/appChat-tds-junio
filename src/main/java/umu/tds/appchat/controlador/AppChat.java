@@ -149,7 +149,7 @@ public enum AppChat {
      * @param texto El texto del mensaje.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    public void enviarMensaje(ContactoIndividual contactoDestino, String texto) throws DAOExcepcion {
+    public void enviarMensaje(Contacto contactoDestino, String texto) throws DAOExcepcion {
         if (usuarioActual == null) {
             throw new IllegalStateException("Debe iniciar sesión para enviar mensajes.");
         }
@@ -159,7 +159,15 @@ public enum AppChat {
 
         // 1. Crear y enviar mensaje ENVIADO
         Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
-        persistirMensaje(contactoDestino, msgEnviado);
+        if(contactoDestino instanceof Grupo) {
+            for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
+                // Enviar el mensaje a cada miembro del grupo
+                Mensaje msgGrupo = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
+            }
+        } else {
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
+        }
     }
 
     /**
