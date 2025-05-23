@@ -8,6 +8,15 @@ public class ContactoIndividual extends Contacto{
         this.usuario = usuario;
     }
 
+    public ContactoIndividual(String nombre, Usuario usuario) {
+        super(0, nombre, null); 
+        this.usuario = usuario;
+    }
+
+    public String getMovil() {
+        return this.usuario.getMovil();
+    }
+
     public Usuario getUsuario() {
         return this.usuario;
     }

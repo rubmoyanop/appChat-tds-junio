@@ -1,5 +1,8 @@
 package umu.tds.appchat.modelo;
+
 import java.util.List;
+import java.util.Collections;
+import java.util.LinkedList;
 
 public abstract class Contacto {
     private int id;
@@ -8,17 +11,49 @@ public abstract class Contacto {
 
     public Contacto(int id) {
         this.id = id;
+        this.mensajes = new LinkedList<>();
     }
 
     public Contacto(int id, String nombre, List<Mensaje> mensajes) {
         this.id = id;
         this.nombre = nombre;
+        this.mensajes = mensajes != null ? mensajes : new LinkedList<>();
+    }
+
+    public List<Mensaje> getMensajes() {
+        return Collections.unmodifiableList(mensajes);
+    }
+
+    public Mensaje getUltimoMensaje() {
+        if (mensajes.isEmpty()) {
+            return null;
+        }
+        return mensajes.get(mensajes.size() - 1);
+    }
+
+    public void setMensajes(List<Mensaje> mensajes) {
         this.mensajes = mensajes;
     }
 
-    public List<Mensaje> getMensajes() { return mensajes; }
-    public void setMensajes(List<Mensaje> mensajes) { this.mensajes = mensajes; }
-    public int getId() { return id; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void agregarMensaje(Mensaje mensaje) {
+        if (mensaje != null) {
+            mensajes.add(mensaje);
+        }
+    }
 }

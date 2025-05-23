@@ -2,12 +2,15 @@ package umu.tds.appchat.vista.pantallas;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 import umu.tds.appchat.controlador.AppChat;
+import umu.tds.appchat.modelo.Contacto;        
 import umu.tds.appchat.modelo.Usuario;
+import umu.tds.appchat.vista.componentes.PanelContactos;
+import umu.tds.appchat.vista.componentes.PanelMensajes;
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
+import umu.tds.appchat.modelo.ContactoIndividual;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -20,7 +23,10 @@ public class VentanaPrincipal implements Ventana {
     private JFrame frame;
     private JPanel mainPanel;
     private JLabel lblNombreUsuario;
-    private JLabel lblFotoUsuario; 
+    private JLabel lblFotoUsuario;
+    private PanelContactos panelContactos;
+    private PanelMensajes panelMensajes;
+    private Contacto contactoSeleccionado;  
 
     public VentanaPrincipal() {
         initialize();
@@ -40,48 +46,36 @@ public class VentanaPrincipal implements Ventana {
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
         // Crear el panel de la izquierda (Contactos)
-        JPanel contactosPanel = new JPanel(new BorderLayout());
-        contactosPanel.setBackground(new Color(245, 245, 245));
-        JLabel lblContactosTitle = new JLabel("Contactos");
-        lblContactosTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        lblContactosTitle.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
-            new EmptyBorder(5, 10, 5, 10)
-        ));
-        lblContactosTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        contactosPanel.add(lblContactosTitle, BorderLayout.NORTH);
-        // TODO:  Aquí iría la lista de contactos
+        panelContactos = new PanelContactos();
 
         // Crear el panel de la derecha (Mensajes)
-        JPanel mensajesPanel = new JPanel(new BorderLayout());
-        mensajesPanel.setBackground(Color.WHITE);
-        JLabel lblMensajesTitle = new JLabel("Mensajes");
-        lblMensajesTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        lblMensajesTitle.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
-            new EmptyBorder(5, 10, 5, 10)
-        ));
-        lblMensajesTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        mensajesPanel.add(lblMensajesTitle, BorderLayout.NORTH);
-        // TODO: Aquí iría la visualización y el envío de mensajes
+        panelMensajes = new PanelMensajes();
 
         // Crear el JSplitPane para dividir los dos paneles
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contactosPanel, mensajesPanel);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelContactos, panelMensajes);
         splitPane.setResizeWeight(0.25);
         splitPane.setEnabled(false);
         splitPane.setBorder(null);
 
         mainPanel.add(splitPane, BorderLayout.CENTER);
+
+        // Al cambiar selección, limpiar y cargar chat del contacto
+        panelContactos.getContactosList().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Contacto c = panelContactos.getContactosList().getSelectedValue();
+                this.contactoSeleccionado = c;
+                mostrarMensajesDeContacto();
+            }
+        });
     }
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel();
-        // BoxLayout para alinear elementos horizontalmente
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.X_AXIS));
         headerPanel.setBackground(new Color(240, 240, 240));
         headerPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY), // Borde inferior
-            new EmptyBorder(5, 10, 5, 10) // Padding
+            BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
+            new EmptyBorder(5, 10, 5, 10)
         ));
 
         // Botones a la izquierda
@@ -99,7 +93,7 @@ public class VentanaPrincipal implements Ventana {
         });
 
         headerPanel.add(btnAddContacto);
-        headerPanel.add(Box.createRigidArea(new Dimension(5, 0))); 
+        headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnAddGrupo);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnVerContactos);
@@ -108,14 +102,12 @@ public class VentanaPrincipal implements Ventana {
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnBuscarMensajes);
 
-        // Espacio flexible para empujar los elementos de la derecha
         headerPanel.add(Box.createHorizontalGlue());
 
         // Elementos a la derecha (Nombre, Foto, Logout)
         lblNombreUsuario = new JLabel("Nombre Usuario");
         lblNombreUsuario.setFont(new Font("Arial", Font.BOLD, 14));
 
-        // Placeholder para la foto del usuario
         lblFotoUsuario = new JLabel();
         lblFotoUsuario.setPreferredSize(new Dimension(40, 30));
         lblFotoUsuario.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -131,14 +123,12 @@ public class VentanaPrincipal implements Ventana {
             }
         });
 
-        // Añadir elementos de la derecha
         headerPanel.add(lblNombreUsuario);
         headerPanel.add(Box.createRigidArea(new Dimension(10, 0)));
         headerPanel.add(lblFotoUsuario);
         headerPanel.add(Box.createRigidArea(new Dimension(10, 0)));
         headerPanel.add(btnLogout);
 
-        // Configurar tooltips (opcional)
         btnAddContacto.setToolTipText("Añadir nuevo contacto individual");
         btnAddGrupo.setToolTipText("Crear nuevo grupo");
         btnVerContactos.setToolTipText("Mostrar lista de contactos y grupos");
@@ -152,7 +142,7 @@ public class VentanaPrincipal implements Ventana {
     private void mostrarDialogoAgregarContacto() {
         JDialog dialogo = new JDialog(frame, "Agregar Nuevo Contacto", true);
         dialogo.setSize(350, 200);
-        dialogo.setLocationRelativeTo(frame); // Center relative to the main window
+        dialogo.setLocationRelativeTo(frame);
         dialogo.setLayout(new BorderLayout(10, 10));
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -187,7 +177,7 @@ public class VentanaPrincipal implements Ventana {
         JButton btnCancelar = new JButton("Cancelar");
         JButton btnAceptar = new JButton("Aceptar");
 
-        btnCancelar.addActionListener(ev -> dialogo.dispose()); 
+        btnCancelar.addActionListener(ev -> dialogo.dispose());
 
         btnAceptar.addActionListener(ev -> {
             String nombre = txtNombreContacto.getText().trim();
@@ -198,6 +188,21 @@ public class VentanaPrincipal implements Ventana {
                 return;
             }
 
+            try {
+                boolean exito = AppChat.INSTANCE.agregarContactoIndividual(nombre, telefono);
+                if (exito) {
+                    JOptionPane.showMessageDialog(dialogo, "Contacto agregado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    dialogo.dispose();
+                    panelContactos.actualizarListaContactos();
+                } else {
+                    JOptionPane.showMessageDialog(dialogo, "No existe ningún usuario registrado con ese teléfono.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(dialogo, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, "Error inesperado al agregar contacto.", "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         buttonPanel.add(btnCancelar);
@@ -215,19 +220,17 @@ public class VentanaPrincipal implements Ventana {
 
     @Override
     public void alMostrar() {
-        // Actualizar datos del usuario cuando la ventana se muestra
-        Usuario usuario = AppChat.INSTANCE.getUsuarioActual(); // Necesitarás este método en AppChat
+        Usuario usuario = AppChat.INSTANCE.getUsuarioActual();
         if (usuario != null) {
             lblNombreUsuario.setText(usuario.getNombre());
-            // Simply set the text for the photo placeholder
             lblFotoUsuario.setText("Foto");
-            lblFotoUsuario.setIcon(null); // Ensure no icon is displayed
+            lblFotoUsuario.setIcon(null);
         } else {
-            // Manejar caso donde no hay usuario (aunque no debería pasar si se llega desde login)
-            lblNombreUsuario.setText("Usuario Desconocido"); // Corrected placeholder text
-            lblFotoUsuario.setText("Foto"); // Consistent placeholder
+            lblNombreUsuario.setText("Usuario Desconocido");
+            lblFotoUsuario.setText("Foto");
             lblFotoUsuario.setIcon(null);
         }
+        panelContactos.actualizarListaContactos();
     }
 
     @Override
@@ -238,5 +241,15 @@ public class VentanaPrincipal implements Ventana {
     @Override
     public TipoVentana getTipo() {
         return TipoVentana.PRINCIPAL;
+    }
+
+    private void mostrarMensajesDeContacto() {
+        panelMensajes.clearMensajes();
+        if (contactoSeleccionado instanceof ContactoIndividual) {
+            panelMensajes.setContactoDestino((ContactoIndividual) contactoSeleccionado);
+            panelMensajes.addMensajesContacto(contactoSeleccionado);
+        } else {
+            panelMensajes.setContactoDestino(null);
+        }
     }
 }

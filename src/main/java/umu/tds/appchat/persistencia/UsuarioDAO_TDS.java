@@ -2,6 +2,8 @@ package umu.tds.appchat.persistencia;
 
 import umu.tds.appchat.dao.DAOExcepcion;
 import umu.tds.appchat.dao.UsuarioDAO;
+import umu.tds.appchat.modelo.Contacto;
+import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Usuario;
 import tds.driver.FactoriaServicioPersistencia;
 import tds.driver.ServicioPersistencia;
@@ -11,18 +13,26 @@ import beans.Propiedad;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class UsuarioDAO_TDS implements UsuarioDAO {
 
     private ServicioPersistencia servPersistencia;
     private PoolUsuarios poolUsuarios;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+    private ContactoIndividualDAO_TDS contactoIndividualDAO;
 
     public UsuarioDAO_TDS() {
         servPersistencia = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
         poolUsuarios = PoolUsuarios.INSTANCE;
+    }
+
+    public void setContactoIndividualDAO(ContactoIndividualDAO_TDS dao) {
+        this.contactoIndividualDAO = dao;
     }
 
     /**
@@ -44,6 +54,12 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
         propiedades.add(new Propiedad("fechaNacimiento", fechaNacStr));
         propiedades.add(new Propiedad("saludo", usuario.getSaludo() != null ? usuario.getSaludo() : ""));
         propiedades.add(new Propiedad("isPremium", String.valueOf(usuario.isPremium())));
+
+        String idsContactos = usuario.getContactos().stream()
+                                     .map(c -> String.valueOf(c.getId()))
+                                     .collect(Collectors.joining(","));
+        propiedades.add(new Propiedad("contactosIds", idsContactos));
+
         entidad.setPropiedades(propiedades);
         return entidad;
     }
@@ -76,6 +92,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
         LocalDate fechaNacimiento = null;
         String saludo = null;
         boolean isPremium = false;
+        String contactosIdsStr = null;
 
         try {
             nombre = servPersistencia.recuperarPropiedadEntidad(entidad, "nombre");
@@ -94,6 +111,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
             saludo = servPersistencia.recuperarPropiedadEntidad(entidad, "saludo");
             String premiumStr = servPersistencia.recuperarPropiedadEntidad(entidad, "isPremium");
             isPremium = Boolean.parseBoolean(premiumStr);
+            contactosIdsStr = servPersistencia.recuperarPropiedadEntidad(entidad, "contactosIds");
         } catch (Exception e) {
             throw new DAOExcepcion("Error al recuperar propiedad de Entidad Usuario con ID: " + entidad.getId(), e);
         }
@@ -102,6 +120,27 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
         usuario.setId(entidad.getId());
 
         poolUsuarios.addUsuario(usuario);
+
+        if (contactosIdsStr != null && !contactosIdsStr.isEmpty()) {
+            List<Contacto> contactos = new ArrayList<>();
+            List<String> idsList = Arrays.asList(contactosIdsStr.split(","));
+            for (String idStr : idsList) {
+                try {
+                    int contactoId = Integer.parseInt(idStr.trim());
+                    ContactoIndividual contacto = contactoIndividualDAO.recuperarContactoIndividual(contactoId);
+                    if (contacto != null) {
+                        contactos.add(contacto);
+                    } else {
+                        System.err.println("Advertencia: No se pudo recuperar el contacto con ID " + contactoId + " para el usuario " + usuario.getId());
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parseando ID de contacto: " + idStr + " para usuario " + usuario.getId());
+                } catch (DAOExcepcion e) {
+                    System.err.println("Error DAO al recuperar contacto con ID " + idStr + " para usuario " + usuario.getId() + ": " + e.getMessage());
+                }
+            }
+            usuario.setContactos(contactos);
+        }
 
         return usuario;
     }
@@ -162,6 +201,9 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
             if (entidad == null) {
                 throw new DAOExcepcion("Usuario no encontrado para modificar (ID: " + usuario.getId() + ")");
             }
+
+            boolean propiedadContactosModificada = false;
+
             for (Propiedad prop : entidad.getPropiedades()) {
                 String nombreProp = prop.getNombre();
                 String nuevoValor = null;
@@ -176,6 +218,12 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
                         break;
                     case "saludo":      nuevoValor = usuario.getSaludo() != null ? usuario.getSaludo() : ""; break;
                     case "isPremium":   nuevoValor = String.valueOf(usuario.isPremium()); break;
+                    case "contactosIds":
+                        nuevoValor = usuario.getContactos().stream()
+                                            .map(c -> String.valueOf(c.getId()))
+                                            .collect(Collectors.joining(","));
+                        propiedadContactosModificada = true;
+                        break;
                     default: continue;
                 }
                 String valorActual = prop.getValor();
@@ -187,6 +235,16 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
                     servPersistencia.modificarPropiedad(prop);
                 }
             }
+
+            if (!propiedadContactosModificada) {
+                String idsContactos = usuario.getContactos().stream()
+                                             .map(c -> String.valueOf(c.getId()))
+                                             .collect(Collectors.joining(","));
+                if (!idsContactos.isEmpty()) {
+                    servPersistencia.anadirPropiedadEntidad(entidad, "contactosIds", idsContactos);
+                }
+            }
+
             if (poolUsuarios.contains(usuario.getId())) {
                 poolUsuarios.addUsuario(usuario);
             }

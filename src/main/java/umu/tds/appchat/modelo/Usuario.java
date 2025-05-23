@@ -111,4 +111,24 @@ public class Usuario {
     public void setContactos(List<Contacto> contactos) {
         this.contactos = contactos;
     }
+
+    /**
+     * Busca un ContactoIndividual en la lista de contactos por su número de móvil.
+     * @param movil El número de móvil del contacto a buscar.
+     * @return El ContactoIndividual si se encuentra, null en caso contrario.
+     */
+    public ContactoIndividual buscarContactoIndividualPorMovil(String movil) {
+        return contactos.stream()
+            .filter(c -> c instanceof ContactoIndividual)
+            .map(c -> (ContactoIndividual) c)
+            .filter(ci -> ci.getUsuario().getMovil().equals(movil))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public void agregarContacto(Contacto contacto) {
+        if (contacto != null) {
+            contactos.add(contacto);
+        }
+    }
 }

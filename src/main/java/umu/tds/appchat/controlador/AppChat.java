@@ -1,8 +1,8 @@
 package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
+import java.time.LocalDateTime;
 import java.util.Date;
-
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -21,6 +21,7 @@ public enum AppChat {
     try {
         factoriaDAO = FactoriaDAO.getInstancia(DAO_TDS);
         this.usuarioDAO = factoriaDAO.getUsuarioDAO();
+        this.contactoIndividualDAO = factoriaDAO.getContactoIndividualDAO();
     } 
     catch (DAOExcepcion e) {
         e.printStackTrace();
@@ -28,7 +29,6 @@ public enum AppChat {
         System.exit(1); 
     }
     
-    contactoIndividualDAO = factoriaDAO.getContactoIndividualDAO();
     grupoDAO = factoriaDAO.getGrupoDAO();
     mensajeDAO = factoriaDAO.getMensajeDAO();
    }
@@ -101,6 +101,127 @@ public enum AppChat {
        this.usuarioActual = null;
        return false;
    }
+
+   /**
+    * Agrega un contacto individual al usuario actual.
+    * @param nombre Nombre del contacto.
+    * @param movil Número de móvil del contacto.
+    * @return true si el contacto se agregó correctamente, false si no existe el usuario.
+    * @throws DAOExcepcion Si ocurre un error de persistencia.
+    */
+   public boolean agregarContactoIndividual(String nombre, String movil) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para agregar contactos.");
+        }
+        if(nombre == null || nombre.isBlank() || movil == null || movil.isBlank()) {
+            throw new IllegalArgumentException("Los campos de nombre y móvil son obligatorios.");
+        }
+
+        //Comprobamos que el usuario esté registrado
+        Usuario nuevoUsuarioContacto = usuarioDAO.recuperarUsuarioPorMovil(movil);
+        if (nuevoUsuarioContacto == null) {
+            return false; 
+        }
+
+        //Comprobamos que el contacto no esté ya agregado en contactos del usuario actual
+        if(usuarioActual.buscarContactoIndividualPorMovil(movil) != null) {
+            throw new IllegalArgumentException("Ya tienes este contacto agregado.");
+        }
+
+        ContactoIndividual contacto = new ContactoIndividual(nombre, nuevoUsuarioContacto);
+
+        // Registrar el nuevo contacto individual en la persistencia
+        contactoIndividualDAO.registrarContactoIndividual(contacto);
+
+        // Agregamos el contacto a la lista de contactos del usuario actual en memoria
+        usuarioActual.agregarContacto(contacto);
+
+        // Actualizar el usuario actual en la persistencia para guardar la nueva relación de contacto
+        usuarioDAO.modificarUsuario(usuarioActual);
+
+        return true;
+    }
+
+    /**
+     * Envía un mensaje de texto a un contacto individual.
+     * @param contactoDestino El contacto al que se envía el mensaje.
+     * @param texto El texto del mensaje.
+     * @throws DAOExcepcion Si ocurre un error de persistencia.
+     */
+    public void enviarMensaje(ContactoIndividual contactoDestino, String texto) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para enviar mensajes.");
+        }
+        if (contactoDestino == null || texto == null || texto.isBlank()) {
+            throw new IllegalArgumentException("Contacto y texto son obligatorios.");
+        }
+
+        // 1. Crear y enviar mensaje ENVIADO
+        Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+        persistirMensaje(contactoDestino, msgEnviado);
+    }
+
+    /**
+     * Envía un emoji a un contacto individual.
+     * @param contactoDestino El contacto al que se envía el emoji.
+     * @param emojiCode Código del emoji.
+     * @throws DAOExcepcion Si ocurre un error de persistencia.
+     */
+    public void enviarEmoji(ContactoIndividual contactoDestino, int emojiCode) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para enviar emojis.");
+        }
+        if (contactoDestino == null || emojiCode < 0) { // Validación básica del código de emoji
+            throw new IllegalArgumentException("Contacto y código de emoji válido son obligatorios.");
+        }
+
+        // 1. Crear y enviar mensaje ENVIADO (Emoji)
+        Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+        persistirMensaje(contactoDestino, msgEnviado);
+    }
+
+    /**
+     * Método auxiliar para persistir un mensaje y actualizar los contactos.
+     * @param contactoDestino El contacto al que se envía el mensaje.
+     * @param msgEnviado El mensaje ya marcado como ENVIADO.
+     * @throws DAOExcepcion Si ocurre un error de persistencia.
+     */
+    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado) throws DAOExcepcion {
+        // Persistir el mensaje enviado
+        mensajeDAO.registrarMensaje(msgEnviado);
+        // Añadir al contacto del remitente y actualizar en persistencia
+        contactoDestino.agregarMensaje(msgEnviado);
+        contactoIndividualDAO.modificarContactoIndividual(contactoDestino);
+
+        // 2. Simular recepción en el otro usuario
+        Usuario receptor = usuarioDAO.recuperarUsuarioPorMovil(contactoDestino.getMovil());
+        if (receptor != null) {
+            // Buscar o crear el contacto correspondiente en el receptor
+            ContactoIndividual contactoReceptor = receptor.buscarContactoIndividualPorMovil(usuarioActual.getMovil());
+            if (contactoReceptor == null) {
+                // Si el receptor no tiene al remitente como contacto, lo crea como un Contacto Desconocido
+                String nombreRemitente = "Contacto Desconocido"; 
+                contactoReceptor = new ContactoIndividual(nombreRemitente, usuarioActual);
+                contactoIndividualDAO.registrarContactoIndividual(contactoReceptor);
+                receptor.agregarContacto(contactoReceptor);
+                usuarioDAO.modificarUsuario(receptor);
+            }
+
+            // Crear el mensaje recibido (reflejando el enviado)
+            Mensaje msgRecibido;
+            if (msgEnviado.isEmoji()) {
+                msgRecibido = new Mensaje(msgEnviado.getCodigoEmoji(), msgEnviado.getFechaHora(), TipoMensaje.RECIBIDO);
+            } else {
+                msgRecibido = new Mensaje(msgEnviado.getTexto(), msgEnviado.getFechaHora(), TipoMensaje.RECIBIDO);
+            }
+
+            // Persistir el mensaje recibido
+            mensajeDAO.registrarMensaje(msgRecibido);
+            // Añadir al contacto del receptor y actualizar en persistencia
+            contactoReceptor.agregarMensaje(msgRecibido);
+            contactoIndividualDAO.modificarContactoIndividual(contactoReceptor);
+        }
+    }
 
    /**
     * Obtiene el usuario que ha iniciado sesión actualmente.
