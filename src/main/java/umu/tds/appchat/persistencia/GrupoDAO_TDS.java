@@ -10,7 +10,6 @@ import tds.driver.FactoriaServicioPersistencia;
 import tds.driver.ServicioPersistencia;
 import umu.tds.appchat.dao.ContactoIndividualDAO;
 import umu.tds.appchat.dao.DAOExcepcion;
-import umu.tds.appchat.dao.FactoriaDAO;
 import umu.tds.appchat.dao.GrupoDAO;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
@@ -20,18 +19,12 @@ public class GrupoDAO_TDS implements GrupoDAO {
     private ServicioPersistencia servPersistencia;
     private ContactoIndividualDAO contactoIndividualDAO;
 
-    
-    public GrupoDAO_TDS(){
-        this(FactoriaServicioPersistencia.getInstance().getServicioPersistencia());
-    }
-
-    private GrupoDAO_TDS(ServicioPersistencia servPersistencia) {
+    // Constructor to be used by the FactoriaDAO_TDS
+    public GrupoDAO_TDS(ServicioPersistencia servPersistencia, ContactoIndividualDAO contactoIndividualDAO) {
         this.servPersistencia = servPersistencia;
-        try {
-            FactoriaDAO factoria = FactoriaDAO_TDS.getInstancia();
-            this.contactoIndividualDAO = factoria.getContactoIndividualDAO();
-        } catch (DAOExcepcion e) {
-            throw new RuntimeException("No se pudo obtener DAOs en ContactoIndividualDAO_TDS", e);
+        this.contactoIndividualDAO = contactoIndividualDAO; 
+        if (this.contactoIndividualDAO == null) {
+            throw new RuntimeException("ContactoIndividualDAO no puede ser nulo en GrupoDAO_TDS");
         }
     }
 

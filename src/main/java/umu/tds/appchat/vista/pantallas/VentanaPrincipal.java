@@ -18,6 +18,7 @@ import umu.tds.appchat.vista.componentes.ListaContactosPanel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -346,8 +347,21 @@ public class VentanaPrincipal implements Ventana {
                 JOptionPane.showMessageDialog(dialogoCrearGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(dialogoCrearGrupo, "Grupo '" + nombreGrupo + "' creado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            dialogoCrearGrupo.dispose();
+            
+            List<ContactoIndividual> miembros = Collections.list(listaContactosAñadidos.elements());
+            try {
+                boolean exito = AppChat.INSTANCE.crearGrupo(nombreGrupo, miembros);
+                if (exito) {
+                    JOptionPane.showMessageDialog(dialogoCrearGrupo, "Grupo '" + nombreGrupo + "' creado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    panelContactos.actualizarListaContactos();
+                    dialogoCrearGrupo.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialogoCrearGrupo, "No se pudo crear el grupo. Puede que ya exista un grupo o contacto con ese nombre.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogoCrearGrupo, "Error inesperado al crear el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         dialogoCrearGrupo.setVisible(true);
