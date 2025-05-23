@@ -13,6 +13,7 @@ import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.vista.componentes.ContactoIndividualListCellRenderer;
+import umu.tds.appchat.vista.componentes.ListaContactosPanel;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -223,44 +224,31 @@ public class VentanaPrincipal implements Ventana {
         dialogo.setVisible(true);
     }
 
-    private void mostrarDialogoCrearGrupo() {
-        JDialog dialogoCrearGrupo = new JDialog(frame, "Crear Nuevo Grupo", true);
-        dialogoCrearGrupo.setSize(650, 450);
-        dialogoCrearGrupo.setLocationRelativeTo(frame);
-        dialogoCrearGrupo.setLayout(new BorderLayout(10, 10));
-
-        // Panel para el nombre del grupo
-        JPanel panelNombreGrupo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelNombreGrupo.setBorder(new EmptyBorder(10, 10, 0, 10));
-        panelNombreGrupo.add(new JLabel("Nombre del Grupo:"));
-        JTextField txtNombreGrupo = new JTextField(20);
-        panelNombreGrupo.add(txtNombreGrupo);
-        dialogoCrearGrupo.add(panelNombreGrupo, BorderLayout.NORTH);
-
+    private ListaContactosPanel getListasContactosGrupos(){
         // Modelos para las listas
-        DefaultListModel<ContactoIndividual> availableContactsModel = new DefaultListModel<>();
-        DefaultListModel<ContactoIndividual> selectedContactsModel = new DefaultListModel<>();
+        DefaultListModel<ContactoIndividual> contactosDisponibles = new DefaultListModel<>();
+        DefaultListModel<ContactoIndividual> contactosGrupo = new DefaultListModel<>(); // This is the selectedContactsModel
 
         Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
         if (usuarioActual != null) {
-            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
-                if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().trim().isEmpty()) {
-                    availableContactsModel.addElement((ContactoIndividual) contacto);
+            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) { 
+                if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().equals("")) {
+                    contactosDisponibles.addElement((ContactoIndividual) contacto);
                 }
             }
         }
 
         // Listas
-        JList<ContactoIndividual> listAvailableContacts = new JList<>(availableContactsModel);
-        listAvailableContacts.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        listAvailableContacts.setCellRenderer(new ContactoIndividualListCellRenderer());
-        JScrollPane scrollPaneAvailable = new JScrollPane(listAvailableContacts);
+        JList<ContactoIndividual> listaContactosDisponibles = new JList<>(contactosDisponibles);
+        listaContactosDisponibles.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        listaContactosDisponibles.setCellRenderer(new ContactoIndividualListCellRenderer());
+        JScrollPane scrollPaneAvailable = new JScrollPane(listaContactosDisponibles);
         scrollPaneAvailable.setBorder(BorderFactory.createTitledBorder("Contactos Disponibles"));
 
-        JList<ContactoIndividual> listSelectedContacts = new JList<>(selectedContactsModel);
-        listSelectedContacts.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        listSelectedContacts.setCellRenderer(new ContactoIndividualListCellRenderer());
-        JScrollPane scrollPaneSelected = new JScrollPane(listSelectedContacts);
+        JList<ContactoIndividual> listaContactosGrupo = new JList<>(contactosGrupo);
+        listaContactosGrupo.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        listaContactosGrupo.setCellRenderer(new ContactoIndividualListCellRenderer());
+        JScrollPane scrollPaneSelected = new JScrollPane(listaContactosGrupo);
         scrollPaneSelected.setBorder(BorderFactory.createTitledBorder("Miembros del Grupo"));
 
         // Botones de transferencia
@@ -276,21 +264,62 @@ public class VentanaPrincipal implements Ventana {
         panelBotonesTransferencia.add(Box.createVerticalGlue());
 
         // Panel central con listas y botones de transferencia
-        JPanel panelCentral = new JPanel(new GridBagLayout());
-        panelCentral.setBorder(new EmptyBorder(5, 10, 5, 10));
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(5, 10, 5, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.45;
-        panelCentral.add(scrollPaneAvailable, gbc);
+        panel.add(scrollPaneAvailable, gbc);
 
         gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.1; gbc.fill = GridBagConstraints.VERTICAL;
         gbc.anchor = GridBagConstraints.CENTER;
-        panelCentral.add(panelBotonesTransferencia, gbc);
+        panel.add(panelBotonesTransferencia, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0.45; gbc.fill = GridBagConstraints.BOTH;
-        panelCentral.add(scrollPaneSelected, gbc);
+        panel.add(scrollPaneSelected, gbc);
+
+        // Lógica de los botones de transferencia
+        btnMoveToSelected.addActionListener(e -> {
+            List<ContactoIndividual> seleccionados = listaContactosDisponibles.getSelectedValuesList();
+            for (ContactoIndividual c : seleccionados) {
+                contactosGrupo.addElement(c);
+                contactosDisponibles.removeElement(c);
+            }
+        });
+
+        btnMoveToAvailable.addActionListener(e -> {
+            List<ContactoIndividual> seleccionados = listaContactosGrupo.getSelectedValuesList();
+            for (ContactoIndividual c : seleccionados) {
+                contactosDisponibles.addElement(c);
+                contactosGrupo.removeElement(c);
+            }
+        });
+
+        return new ListaContactosPanel(panel, contactosGrupo);
+    }
+
+
+
+    private void mostrarDialogoCrearGrupo() {
+        JDialog dialogoCrearGrupo = new JDialog(frame, "Crear Nuevo Grupo", true);
+        dialogoCrearGrupo.setSize(650, 450);
+        dialogoCrearGrupo.setLocationRelativeTo(frame);
+        dialogoCrearGrupo.setLayout(new BorderLayout(10, 10));
+
+        // Panel para el nombre del grupo
+        JPanel panelNombreGrupo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelNombreGrupo.setBorder(new EmptyBorder(10, 10, 0, 10));
+        panelNombreGrupo.add(new JLabel("Nombre del Grupo:"));
+        JTextField txtNombreGrupo = new JTextField(20);
+        panelNombreGrupo.add(txtNombreGrupo);
+        dialogoCrearGrupo.add(panelNombreGrupo, BorderLayout.NORTH);
+
+        // Panel para las listas de contactos
+        ListaContactosPanel groupComponents = getListasContactosGrupos();
+        JPanel panelCentral = groupComponents.getPanel();
+        DefaultListModel<ContactoIndividual> listaContactosAñadidos = groupComponents.getListaContactos();
 
         dialogoCrearGrupo.add(panelCentral, BorderLayout.CENTER);
 
@@ -303,23 +332,6 @@ public class VentanaPrincipal implements Ventana {
         panelBotonesDialogo.add(btnCancelar);
         dialogoCrearGrupo.add(panelBotonesDialogo, BorderLayout.SOUTH);
 
-        // Lógica de los botones de transferencia
-        btnMoveToSelected.addActionListener(e -> {
-            List<ContactoIndividual> seleccionados = listAvailableContacts.getSelectedValuesList();
-            for (ContactoIndividual c : seleccionados) {
-                selectedContactsModel.addElement(c);
-                availableContactsModel.removeElement(c);
-            }
-        });
-
-        btnMoveToAvailable.addActionListener(e -> {
-            List<ContactoIndividual> seleccionados = listSelectedContacts.getSelectedValuesList();
-            for (ContactoIndividual c : seleccionados) {
-                availableContactsModel.addElement(c);
-                selectedContactsModel.removeElement(c);
-            }
-        });
-
         // Lógica del botón Cancelar
         btnCancelar.addActionListener(e -> dialogoCrearGrupo.dispose());
 
@@ -330,7 +342,7 @@ public class VentanaPrincipal implements Ventana {
                 JOptionPane.showMessageDialog(dialogoCrearGrupo, "El nombre del grupo no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (selectedContactsModel.isEmpty()) {
+            if (listaContactosAñadidos.isEmpty()) {
                 JOptionPane.showMessageDialog(dialogoCrearGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
