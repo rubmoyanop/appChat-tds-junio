@@ -14,7 +14,6 @@ import umu.tds.appchat.modelo.Mensaje;
 import umu.tds.appchat.modelo.TipoMensaje;
 import umu.tds.appchat.controlador.AppChat;
 import umu.tds.appchat.dao.DAOExcepcion;
-import umu.tds.appchat.modelo.ContactoIndividual;
 
 /**
  * Panel que muestra el área de mensajes y el área de envío.
@@ -24,7 +23,7 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
     private JPanel chatPanel; // Panel que contiene las burbujas de mensajes
     private JTextArea messageInput; // Área de texto para escribir mensajes
     private JButton sendButton; // Botón para enviar mensajes
-    private ContactoIndividual contactoDestino; // Contacto destino para enviar mensajes
+    private Contacto contactoDestino; // Contacto destino para enviar mensajes
 
     public PanelMensajes() {
         super(new BorderLayout());
@@ -36,7 +35,7 @@ public class PanelMensajes extends JPanel implements EmojiSelectionListener {
      * Setter para que VentanaPrincipal informe el contacto seleccionado.
      * @param contacto El contacto destino.
      */
-    public void setContactoDestino(ContactoIndividual contacto) {
+    public void setContactoDestino(Contacto contacto) {
         this.contactoDestino = contacto;
     }
 
