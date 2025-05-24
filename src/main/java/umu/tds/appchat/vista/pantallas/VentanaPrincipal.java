@@ -12,7 +12,7 @@ import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 import umu.tds.appchat.modelo.ContactoIndividual;
-import umu.tds.appchat.vista.componentes.ContactoIndividualListCellRenderer;
+import umu.tds.appchat.vista.componentes.ContactoGrupoCellRenderer;
 import umu.tds.appchat.vista.componentes.ListaContactosPanel;
 
 import java.awt.*;
@@ -242,13 +242,13 @@ public class VentanaPrincipal implements Ventana {
         // Listas
         JList<ContactoIndividual> listaContactosDisponibles = new JList<>(contactosDisponibles);
         listaContactosDisponibles.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        listaContactosDisponibles.setCellRenderer(new ContactoIndividualListCellRenderer());
+        listaContactosDisponibles.setCellRenderer(new ContactoGrupoCellRenderer());
         JScrollPane scrollPaneAvailable = new JScrollPane(listaContactosDisponibles);
         scrollPaneAvailable.setBorder(BorderFactory.createTitledBorder("Contactos Disponibles"));
 
         JList<ContactoIndividual> listaContactosGrupo = new JList<>(contactosGrupo);
         listaContactosGrupo.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        listaContactosGrupo.setCellRenderer(new ContactoIndividualListCellRenderer());
+        listaContactosGrupo.setCellRenderer(new ContactoGrupoCellRenderer());
         JScrollPane scrollPaneSelected = new JScrollPane(listaContactosGrupo);
         scrollPaneSelected.setBorder(BorderFactory.createTitledBorder("Miembros del Grupo"));
 
