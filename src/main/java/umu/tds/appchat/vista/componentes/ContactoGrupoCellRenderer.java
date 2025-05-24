@@ -7,7 +7,11 @@ import javax.swing.JList;
 
 import umu.tds.appchat.modelo.ContactoIndividual;
 
-public class ContactoIndividualListCellRenderer extends DefaultListCellRenderer {
+/**
+ * Clase que renderiza un contacto individual en una lista.
+ * Muestra el nombre y el número de móvil del contacto.
+ */
+public class ContactoGrupoCellRenderer extends DefaultListCellRenderer {
     @Override
     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
