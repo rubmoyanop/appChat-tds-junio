@@ -437,8 +437,8 @@ public class VentanaPrincipal implements Ventana {
 
     private void mostrarMensajesDeContacto() {
         panelMensajes.clearMensajes();
-        if (contactoSeleccionado instanceof ContactoIndividual) {
-            panelMensajes.setContactoDestino((ContactoIndividual) contactoSeleccionado);
+        if (contactoSeleccionado != null) {
+            panelMensajes.setContactoDestino(contactoSeleccionado);
             panelMensajes.addMensajesContacto(contactoSeleccionado);
         } else {
             panelMensajes.setContactoDestino(null);
