@@ -22,7 +22,7 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
         usuarioDAO = new UsuarioDAO_TDS();
         mensajeDAO = new MensajeDAO_TDS(); 
         contactoDAO = new ContactoIndividualDAO_TDS(serv, usuarioDAO, mensajeDAO); 
-        grupoDAO = new GrupoDAO_TDS(serv, contactoDAO); 
+        grupoDAO = new GrupoDAO_TDS(); 
         usuarioDAO.setContactoIndividualDAO(contactoDAO);
     }
 
