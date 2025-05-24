@@ -171,22 +171,28 @@ public enum AppChat {
     }
 
     /**
-     * Envía un emoji a un contacto individual.
-     * @param contactoDestino El contacto al que se envía el emoji.
+     * Envía un emoji a un contacto individual o a todos los miembros de un grupo.
+     * @param contactoDestino El contacto o grupo al que se envía el emoji.
      * @param emojiCode Código del emoji.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    public void enviarEmoji(ContactoIndividual contactoDestino, int emojiCode) throws DAOExcepcion {
+    public void enviarEmoji(Contacto contactoDestino, int emojiCode) throws DAOExcepcion {
         if (usuarioActual == null) {
             throw new IllegalStateException("Debe iniciar sesión para enviar emojis.");
         }
-        if (contactoDestino == null || emojiCode < 0) { // Validación básica del código de emoji
+        if (contactoDestino == null || emojiCode < 0) {
             throw new IllegalArgumentException("Contacto y código de emoji válido son obligatorios.");
         }
 
-        // 1. Crear y enviar mensaje ENVIADO (Emoji)
-        Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
-        persistirMensaje(contactoDestino, msgEnviado);
+        if (contactoDestino instanceof Grupo) {
+            for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
+                Mensaje msgGrupo = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
+            }
+        } else {
+            Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
+        }
     }
 
     /**
