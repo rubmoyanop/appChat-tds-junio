@@ -163,10 +163,10 @@ public enum AppChat {
             for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
                 // Enviar el mensaje a cada miembro del grupo
                 Mensaje msgGrupo = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
-                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
             }
         } else {
-            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
         }
     }
 
@@ -187,11 +187,11 @@ public enum AppChat {
         if (contactoDestino instanceof Grupo) {
             for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
                 Mensaje msgGrupo = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
-                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
             }
         } else {
             Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
-            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
         }
     }
 
@@ -201,12 +201,20 @@ public enum AppChat {
      * @param msgEnviado El mensaje ya marcado como ENVIADO.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado) throws DAOExcepcion {
+    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado, boolean guardarEnRemitente) throws DAOExcepcion {
         // Persistir el mensaje enviado
         mensajeDAO.registrarMensaje(msgEnviado);
         // Añadir al contacto del remitente y actualizar en persistencia
         contactoDestino.agregarMensaje(msgEnviado);
         contactoIndividualDAO.modificarContactoIndividual(contactoDestino);
+
+        if (guardarEnRemitente && usuarioActual != null) {
+            ContactoIndividual miContacto = usuarioActual.buscarContactoIndividualPorMovil(contactoDestino.getUsuario().getMovil());
+            if (miContacto != null) {
+                miContacto.agregarMensaje(msgEnviado);
+                contactoIndividualDAO.modificarContactoIndividual(miContacto);
+            }
+        }
 
         // 2. Simular recepción en el otro usuario
         Usuario receptor = usuarioDAO.recuperarUsuarioPorMovil(contactoDestino.getMovil());
