@@ -25,6 +25,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
     private PoolUsuarios poolUsuarios;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private ContactoIndividualDAO_TDS contactoIndividualDAO;
+    private GrupoDAO_TDS grupoDAO;
 
     public UsuarioDAO_TDS() {
         servPersistencia = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
@@ -33,6 +34,10 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
 
     public void setContactoIndividualDAO(ContactoIndividualDAO_TDS dao) {
         this.contactoIndividualDAO = dao;
+    }
+
+    public void setGrupoDAO(GrupoDAO_TDS dao) {
+        this.grupoDAO = dao;
     }
 
     /**
