@@ -24,6 +24,7 @@ public final class FactoriaDAO_TDS extends FactoriaDAO {
         contactoDAO = new ContactoIndividualDAO_TDS(serv, usuarioDAO, mensajeDAO); 
         grupoDAO = new GrupoDAO_TDS(); 
         usuarioDAO.setContactoIndividualDAO(contactoDAO);
+        grupoDAO.setContactoIndividualDAO(contactoDAO);
     }
 
     @Override
