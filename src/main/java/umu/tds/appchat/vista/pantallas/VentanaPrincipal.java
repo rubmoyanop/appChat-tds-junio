@@ -251,42 +251,15 @@ public class VentanaPrincipal implements Ventana {
         DefaultListModel<ContactoIndividual> contactosDisponibles = new DefaultListModel<>();
         DefaultListModel<ContactoIndividual> contactosGrupo = new DefaultListModel<>();
 
-        Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
-        if (usuarioActual != null) {
-            //Al crear, añadimos todos los contactos disponibles
-            if(g == null){
-                for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) { 
-                    if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().equals("")) {
-                        contactosDisponibles.addElement((ContactoIndividual) contacto);
-                    }
-                }
-            }
-            //Al modificar, primero añadimos los miembros actuales del grupo a su lista
-            //y luego los contactos disponibles que no son miembros.
-            else{
+        List<ContactoIndividual> disponibles = AppChat.INSTANCE.getContactosDisponiblesParaGrupo(g);
+        List<ContactoIndividual> miembros = AppChat.INSTANCE.getMiembrosGrupo(g);
 
-                for (ContactoIndividual miembro : g.getMiembros()) {
-                    contactosGrupo.addElement(miembro);
-                }
-
-                for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
-                    if (contacto instanceof ContactoIndividual) {
-                        ContactoIndividual ci = (ContactoIndividual) contacto;
-                        boolean isAlreadyMember = false;
-                        
-                        for (ContactoIndividual miembro : g.getMiembros()) {
-                            if (miembro.equals(ci)) {
-                                isAlreadyMember = true;
-                                break;
-                            }
-                        }
-
-                        if (!isAlreadyMember && ci.getNombre() != null && !ci.getNombre().equals("")) {
-                            contactosDisponibles.addElement(ci);
-                        }
-                    }
-                }
-            }
+        for (ContactoIndividual contacto : disponibles) {
+            contactosDisponibles.addElement(contacto);
+        }
+        
+        for (ContactoIndividual miembro : miembros) {
+            contactosGrupo.addElement(miembro);
         }
 
         // Listas
@@ -450,6 +423,10 @@ public class VentanaPrincipal implements Ventana {
             }
 
             try {
+                // Actualizar los miembros del grupo antes de persistir
+                List<ContactoIndividual> nuevosMiembros = Collections.list(listaContactosAñadidos.elements());
+                g.setMiembros(nuevosMiembros);
+                
                 boolean exito = AppChat.INSTANCE.modificarGrupo(g);
                 if (exito) {
                     JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo '" + g.getNombre() + "' modificado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
