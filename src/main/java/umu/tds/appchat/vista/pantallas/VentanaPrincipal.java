@@ -483,15 +483,27 @@ public class VentanaPrincipal implements Ventana {
         // Lógica del botón Cancelar
         btnCancelar.addActionListener(e -> dialogoModificarGrupo.dispose());
 
-        // Lógica del botón Crear Grupo
+        // Lógica del botón Modificar Grupo
         btnActualizar.addActionListener(e -> {
             if (listaContactosAñadidos.isEmpty()) {
                 JOptionPane.showMessageDialog(dialogoModificarGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            dialogoModificarGrupo.dispose();
         });
+
+        try {
+            boolean exito = AppChat.INSTANCE.modificarGrupo(g);
+            if (exito) {
+                JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo '" + g.getNombre() + "' modificado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                panelContactos.actualizarListaContactos();
+                dialogoModificarGrupo.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialogoModificarGrupo, "No se pudo crear el grupo. Puede que ya exista un grupo o contacto con ese nombre.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Error inesperado al crear el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
 
         dialogoModificarGrupo.setVisible(true);
     }

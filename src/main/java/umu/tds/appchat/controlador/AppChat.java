@@ -272,6 +272,18 @@ public enum AppChat {
         return true;
     }
 
+    public boolean modificarGrupo(Grupo g) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para modificar un grupo.");
+        }
+        if (g == null || g.getNombre() == null || g.getNombre().isBlank()) {
+            throw new IllegalArgumentException("El grupo y su nombre no pueden estar vacíos.");
+        }
+        // Actualizar el grupo en la persistencia
+        grupoDAO.modificarGrupo(g);
+        return true;
+    }
+
    /**
     * Obtiene el usuario que ha iniciado sesión actualmente.
     * @return El Usuario actual, o null si nadie ha iniciado sesión.
