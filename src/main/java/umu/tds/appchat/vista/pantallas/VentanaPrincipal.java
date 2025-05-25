@@ -12,6 +12,7 @@ import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 import umu.tds.appchat.modelo.ContactoIndividual;
+import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.vista.componentes.ContactoGrupoCellRenderer;
 import umu.tds.appchat.vista.componentes.ListaContactosPanel;
 
@@ -89,6 +90,7 @@ public class VentanaPrincipal implements Ventana {
         JButton btnVerContactos = new JButton("Ver Contactos");
         JButton btnPremium = new JButton("Premium");
         JButton btnBuscarMensajes = new JButton("Buscar Mensajes");
+        JButton btnModificarGrupo = new JButton("Modificar Grupo");
 
         btnAddContacto.addActionListener(new ActionListener() {
             @Override
@@ -104,6 +106,13 @@ public class VentanaPrincipal implements Ventana {
             }
         });
 
+        btnModificarGrupo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoElegirGrupo();
+            }
+        });
+
         headerPanel.add(btnAddContacto);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnAddGrupo);
@@ -113,6 +122,8 @@ public class VentanaPrincipal implements Ventana {
         headerPanel.add(btnPremium);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnBuscarMensajes);
+        headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
+        headerPanel.add(btnModificarGrupo);
 
         headerPanel.add(Box.createHorizontalGlue());
 
@@ -225,16 +236,45 @@ public class VentanaPrincipal implements Ventana {
         dialogo.setVisible(true);
     }
 
-    private ListaContactosPanel getListasContactosGrupos(){
+    private ListaContactosPanel getListasContactosGrupos(Grupo g){ //Si es null, estamos creando un grupo
         // Modelos para las listas
         DefaultListModel<ContactoIndividual> contactosDisponibles = new DefaultListModel<>();
-        DefaultListModel<ContactoIndividual> contactosGrupo = new DefaultListModel<>(); // This is the selectedContactsModel
+        DefaultListModel<ContactoIndividual> contactosGrupo = new DefaultListModel<>();
 
         Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
         if (usuarioActual != null) {
-            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) { 
-                if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().equals("")) {
-                    contactosDisponibles.addElement((ContactoIndividual) contacto);
+            //Al crear, añadimos todos los contactos disponibles
+            if(g == null){
+                for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) { 
+                    if (contacto instanceof ContactoIndividual && contacto.getNombre() != null && !contacto.getNombre().equals("")) {
+                        contactosDisponibles.addElement((ContactoIndividual) contacto);
+                    }
+                }
+            }
+            //Al modificar, primero añadimos los miembros actuales del grupo a su lista
+            //y luego los contactos disponibles que no son miembros.
+            else{
+
+                for (ContactoIndividual miembro : g.getMiembros()) {
+                    contactosGrupo.addElement(miembro);
+                }
+
+                for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
+                    if (contacto instanceof ContactoIndividual) {
+                        ContactoIndividual ci = (ContactoIndividual) contacto;
+                        boolean isAlreadyMember = false;
+                        
+                        for (ContactoIndividual miembro : g.getMiembros()) {
+                            if (miembro.equals(ci)) {
+                                isAlreadyMember = true;
+                                break;
+                            }
+                        }
+
+                        if (!isAlreadyMember && ci.getNombre() != null && !ci.getNombre().equals("")) {
+                            contactosDisponibles.addElement(ci);
+                        }
+                    }
                 }
             }
         }
@@ -285,7 +325,7 @@ public class VentanaPrincipal implements Ventana {
         btnMoveToSelected.addActionListener(e -> {
             List<ContactoIndividual> seleccionados = listaContactosDisponibles.getSelectedValuesList();
             for (ContactoIndividual c : seleccionados) {
-                contactosGrupo.addElement(c);
+                if(!contactosGrupo.contains(c)) contactosGrupo.addElement(c);
                 contactosDisponibles.removeElement(c);
             }
         });
@@ -293,7 +333,7 @@ public class VentanaPrincipal implements Ventana {
         btnMoveToAvailable.addActionListener(e -> {
             List<ContactoIndividual> seleccionados = listaContactosGrupo.getSelectedValuesList();
             for (ContactoIndividual c : seleccionados) {
-                contactosDisponibles.addElement(c);
+                if(!contactosDisponibles.contains(c)) contactosDisponibles.addElement(c);
                 contactosGrupo.removeElement(c);
             }
         });
@@ -318,7 +358,7 @@ public class VentanaPrincipal implements Ventana {
         dialogoCrearGrupo.add(panelNombreGrupo, BorderLayout.NORTH);
 
         // Panel para las listas de contactos
-        ListaContactosPanel groupComponents = getListasContactosGrupos();
+        ListaContactosPanel groupComponents = getListasContactosGrupos(null);
         JPanel panelCentral = groupComponents.getPanel();
         DefaultListModel<ContactoIndividual> listaContactosAñadidos = groupComponents.getListaContactos();
 
@@ -367,14 +407,65 @@ public class VentanaPrincipal implements Ventana {
         dialogoCrearGrupo.setVisible(true);
     }
 
-    private void mostrarDialogoModificarGrupo(){
-        JDialog dialogoModificarGrupo = new JDialog(frame, "Crear Nuevo Grupo", true);
+    private void mostrarDialogoElegirGrupo(){
+        JDialog dialogoElegirGrupo = new JDialog(frame, "Elegir Grupo a Modificar", true);
+        dialogoElegirGrupo.setSize(400, 300);
+        dialogoElegirGrupo.setLocationRelativeTo(frame);
+        dialogoElegirGrupo.setLayout(new BorderLayout(10, 10));
+
+        DefaultListModel<Grupo> listModelGrupos = new DefaultListModel<>();
+        Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
+        if (usuarioActual != null) {
+            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
+                if (contacto instanceof Grupo) {
+                    listModelGrupos.addElement((Grupo) contacto);
+                }
+            }
+        }
+
+        if (listModelGrupos.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No hay grupos disponibles para modificar.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        JList<Grupo> listaGrupos = new JList<>(listModelGrupos);
+        listaGrupos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listaGrupos.setCellRenderer(new ContactoGrupoCellRenderer()); // Reutilizamos el renderer si es adecuado o creamos uno específico
+        JScrollPane scrollPaneGrupos = new JScrollPane(listaGrupos);
+        scrollPaneGrupos.setBorder(BorderFactory.createTitledBorder("Seleccione un Grupo"));
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnSeleccionar = new JButton("Seleccionar");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        btnSeleccionar.addActionListener(e -> {
+            Grupo grupoSeleccionado = listaGrupos.getSelectedValue();
+            if (grupoSeleccionado != null) {
+                dialogoElegirGrupo.dispose();
+                mostrarDialogoModificarGrupo(grupoSeleccionado);
+            } else {
+                JOptionPane.showMessageDialog(dialogoElegirGrupo, "Debe seleccionar un grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnCancelar.addActionListener(e -> dialogoElegirGrupo.dispose());
+
+        panelBotones.add(btnCancelar);
+        panelBotones.add(btnSeleccionar);
+
+        dialogoElegirGrupo.add(scrollPaneGrupos, BorderLayout.CENTER);
+        dialogoElegirGrupo.add(panelBotones, BorderLayout.SOUTH);
+        dialogoElegirGrupo.setVisible(true);
+    }
+
+    private void mostrarDialogoModificarGrupo(Grupo g){
+        JDialog dialogoModificarGrupo = new JDialog(frame, "Modificar Grupo: " + g.getNombre(), true);
         dialogoModificarGrupo.setSize(650, 450);
         dialogoModificarGrupo.setLocationRelativeTo(frame);
         dialogoModificarGrupo.setLayout(new BorderLayout(10, 10));
 
         // Panel para las listas de contactos
-        ListaContactosPanel groupComponents = getListasContactosGrupos();
+        ListaContactosPanel groupComponents = getListasContactosGrupos(g);
         JPanel panelCentral = groupComponents.getPanel();
         DefaultListModel<ContactoIndividual> listaContactosAñadidos = groupComponents.getListaContactos();
 
