@@ -109,7 +109,17 @@ public class VentanaPrincipal implements Ventana {
         btnModificarGrupo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mostrarDialogoElegirGrupo();
+                if (contactoSeleccionado == null) {
+                    JOptionPane.showMessageDialog(frame, "Debe seleccionar un contacto primero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (!(contactoSeleccionado instanceof Grupo)) {
+                    JOptionPane.showMessageDialog(frame, "El contacto seleccionado no es un grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                mostrarDialogoModificarGrupo((Grupo) contactoSeleccionado);
             }
         });
 
@@ -407,57 +417,6 @@ public class VentanaPrincipal implements Ventana {
         dialogoCrearGrupo.setVisible(true);
     }
 
-    private void mostrarDialogoElegirGrupo(){
-        JDialog dialogoElegirGrupo = new JDialog(frame, "Elegir Grupo a Modificar", true);
-        dialogoElegirGrupo.setSize(400, 300);
-        dialogoElegirGrupo.setLocationRelativeTo(frame);
-        dialogoElegirGrupo.setLayout(new BorderLayout(10, 10));
-
-        DefaultListModel<Grupo> listModelGrupos = new DefaultListModel<>();
-        Usuario usuarioActual = AppChat.INSTANCE.getUsuarioActual();
-        if (usuarioActual != null) {
-            for (Contacto contacto : AppChat.INSTANCE.getContactosUsuarioActual()) {
-                if (contacto instanceof Grupo) {
-                    listModelGrupos.addElement((Grupo) contacto);
-                }
-            }
-        }
-
-        if (listModelGrupos.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "No hay grupos disponibles para modificar.", "Información", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        JList<Grupo> listaGrupos = new JList<>(listModelGrupos);
-        listaGrupos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        listaGrupos.setCellRenderer(new ContactoGrupoCellRenderer()); // Reutilizamos el renderer si es adecuado o creamos uno específico
-        JScrollPane scrollPaneGrupos = new JScrollPane(listaGrupos);
-        scrollPaneGrupos.setBorder(BorderFactory.createTitledBorder("Seleccione un Grupo"));
-
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnSeleccionar = new JButton("Seleccionar");
-        JButton btnCancelar = new JButton("Cancelar");
-
-        btnSeleccionar.addActionListener(e -> {
-            Grupo grupoSeleccionado = listaGrupos.getSelectedValue();
-            if (grupoSeleccionado != null) {
-                dialogoElegirGrupo.dispose();
-                mostrarDialogoModificarGrupo(grupoSeleccionado);
-            } else {
-                JOptionPane.showMessageDialog(dialogoElegirGrupo, "Debe seleccionar un grupo.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        btnCancelar.addActionListener(e -> dialogoElegirGrupo.dispose());
-
-        panelBotones.add(btnCancelar);
-        panelBotones.add(btnSeleccionar);
-
-        dialogoElegirGrupo.add(scrollPaneGrupos, BorderLayout.CENTER);
-        dialogoElegirGrupo.add(panelBotones, BorderLayout.SOUTH);
-        dialogoElegirGrupo.setVisible(true);
-    }
-
     private void mostrarDialogoModificarGrupo(Grupo g){
         JDialog dialogoModificarGrupo = new JDialog(frame, "Modificar Grupo: " + g.getNombre(), true);
         dialogoModificarGrupo.setSize(650, 450);
@@ -489,21 +448,21 @@ public class VentanaPrincipal implements Ventana {
                 JOptionPane.showMessageDialog(dialogoModificarGrupo, "Debe seleccionar al menos un miembro para el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-        });
 
-        try {
-            boolean exito = AppChat.INSTANCE.modificarGrupo(g);
-            if (exito) {
-                JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo '" + g.getNombre() + "' modificado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                panelContactos.actualizarListaContactos();
-                dialogoModificarGrupo.dispose();
-            } else {
-                JOptionPane.showMessageDialog(dialogoModificarGrupo, "No se pudo modificar el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                boolean exito = AppChat.INSTANCE.modificarGrupo(g);
+                if (exito) {
+                    JOptionPane.showMessageDialog(dialogoModificarGrupo, "Grupo '" + g.getNombre() + "' modificado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    panelContactos.actualizarListaContactos();
+                    dialogoModificarGrupo.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialogoModificarGrupo, "No se pudo modificar el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogoModificarGrupo, "Error inesperado al modificar el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Error inesperado al modificar el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
+        });
 
         dialogoModificarGrupo.setVisible(true);
     }
