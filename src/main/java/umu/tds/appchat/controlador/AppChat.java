@@ -224,7 +224,7 @@ public enum AppChat {
             ContactoIndividual contactoReceptor = receptor.buscarContactoIndividualPorMovil(usuarioActual.getMovil());
             if (contactoReceptor == null) {
                 // Si el receptor no tiene al remitente como contacto, lo crea como un Contacto Desconocido
-                String nombreRemitente = "Contacto Desconocido"; 
+                String nombreRemitente = ""; 
                 contactoReceptor = new ContactoIndividual(nombreRemitente, usuarioActual);
                 contactoIndividualDAO.registrarContactoIndividual(contactoReceptor);
                 receptor.agregarContacto(contactoReceptor);
@@ -318,5 +318,24 @@ public enum AppChat {
     */
    public void logout() {
        this.usuarioActual = null;
+   }
+
+   public boolean actualizarNombreContacto(Contacto contacto, String nuevoNombre) throws DAOExcepcion {
+       if (contacto == null || nuevoNombre == null || nuevoNombre.isBlank()) {
+           throw new IllegalArgumentException("Contacto y nuevo nombre son obligatorios.");
+       }
+       if(contacto instanceof ContactoIndividual) {
+           ContactoIndividual contactoIndividual = (ContactoIndividual) contacto;
+           contactoIndividual.setNombre(nuevoNombre);
+           contactoIndividualDAO.modificarContactoIndividual((ContactoIndividual) contacto);
+       }
+       return true;
+   }
+
+   public boolean esDesconocido(Contacto contacto) {
+       if (contacto == null) {
+           throw new IllegalArgumentException("El contacto no puede ser nulo.");
+       }
+       return contacto.getNombre().equals("");
    }
 }

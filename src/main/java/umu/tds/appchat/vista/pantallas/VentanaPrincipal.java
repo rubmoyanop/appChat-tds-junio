@@ -246,6 +246,68 @@ public class VentanaPrincipal implements Ventana {
         dialogo.setVisible(true);
     }
 
+    private void mostrarDialogoCambiarNombreContacto() {
+        JDialog dialogo = new JDialog(frame, "Asignar Nombre", true);
+        dialogo.setSize(350, 200);
+        dialogo.setLocationRelativeTo(frame);
+        dialogo.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("Asignar Nombre al Contacto Seleccionado:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        JTextField txtNombreContacto = new JTextField();
+        formPanel.add(txtNombreContacto, gbc);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnCancelar = new JButton("Cancelar");
+        JButton btnAceptar = new JButton("Aceptar");
+
+        btnCancelar.addActionListener(ev -> dialogo.dispose());
+
+        btnAceptar.addActionListener(ev -> {
+            String nombre = txtNombreContacto.getText().trim();
+
+            if (nombre.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogo, "El nombre es obligatorio.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                boolean exito = AppChat.INSTANCE.actualizarNombreContacto(contactoSeleccionado, nombre);
+                if (exito) {
+                    JOptionPane.showMessageDialog(dialogo, "Nombre agregado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    dialogo.dispose();
+                    panelContactos.actualizarListaContactos();
+                } else {
+                    JOptionPane.showMessageDialog(dialogo, "Error al actualizar el nombre.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(dialogo, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, "Error inesperado al actualizar el nombre.", "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        buttonPanel.add(btnCancelar);
+        buttonPanel.add(btnAceptar);
+
+        dialogo.add(formPanel, BorderLayout.CENTER);
+        dialogo.add(buttonPanel, BorderLayout.SOUTH);
+        dialogo.setVisible(true);
+    }
+
     private ListaContactosPanel getListasContactosGrupos(Grupo g){ //Si es null, estamos creando un grupo
         // Modelos para las listas
         DefaultListModel<ContactoIndividual> contactosDisponibles = new DefaultListModel<>();
@@ -479,6 +541,7 @@ public class VentanaPrincipal implements Ventana {
         if (contactoSeleccionado != null) {
             panelMensajes.setContactoDestino(contactoSeleccionado);
             panelMensajes.addMensajesContacto(contactoSeleccionado);
+            if(AppChat.INSTANCE.esDesconocido(contactoSeleccionado)) mostrarDialogoCambiarNombreContacto();
         } else {
             panelMensajes.setContactoDestino(null);
         }
