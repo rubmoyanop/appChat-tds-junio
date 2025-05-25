@@ -2,6 +2,7 @@ package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import umu.tds.appchat.dao.*;
@@ -298,6 +299,19 @@ public enum AppChat {
          }
          return usuarioActual.getContactos();
    }
+
+   public List<ContactoIndividual> getContactosDisponiblesParaGrupo(Grupo grupo) {
+        return getContactosUsuarioActual().stream()
+                .filter(contacto -> contacto instanceof ContactoIndividual)
+                .map(contacto -> (ContactoIndividual) contacto)
+                .filter(ci -> (grupo == null || !grupo.esMiembro(ci)) && 
+                             ci.getNombre() != null && !ci.getNombre().isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<ContactoIndividual> getMiembrosGrupo(Grupo grupo) {
+        return grupo != null ? grupo.getMiembros() : new ArrayList<>();
+    }
 
    /**
     * Cierra la sesión del usuario actual.
