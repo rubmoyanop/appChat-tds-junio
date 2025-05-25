@@ -498,10 +498,10 @@ public class VentanaPrincipal implements Ventana {
                 panelContactos.actualizarListaContactos();
                 dialogoModificarGrupo.dispose();
             } else {
-                JOptionPane.showMessageDialog(dialogoModificarGrupo, "No se pudo crear el grupo. Puede que ya exista un grupo o contacto con ese nombre.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialogoModificarGrupo, "No se pudo modificar el grupo.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Error inesperado al crear el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(dialogoModificarGrupo, "Error inesperado al modificar el grupo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
 
