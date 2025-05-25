@@ -2,7 +2,9 @@ package umu.tds.appchat.controlador;
 import java.time.LocalDate; 
 import java.time.ZoneId; 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -148,7 +150,7 @@ public enum AppChat {
      * @param texto El texto del mensaje.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    public void enviarMensaje(ContactoIndividual contactoDestino, String texto) throws DAOExcepcion {
+    public void enviarMensaje(Contacto contactoDestino, String texto) throws DAOExcepcion {
         if (usuarioActual == null) {
             throw new IllegalStateException("Debe iniciar sesión para enviar mensajes.");
         }
@@ -158,26 +160,40 @@ public enum AppChat {
 
         // 1. Crear y enviar mensaje ENVIADO
         Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
-        persistirMensaje(contactoDestino, msgEnviado);
+        if(contactoDestino instanceof Grupo) {
+            for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
+                // Enviar el mensaje a cada miembro del grupo
+                Mensaje msgGrupo = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
+            }
+        } else {
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
+        }
     }
 
     /**
-     * Envía un emoji a un contacto individual.
-     * @param contactoDestino El contacto al que se envía el emoji.
+     * Envía un emoji a un contacto individual o a todos los miembros de un grupo.
+     * @param contactoDestino El contacto o grupo al que se envía el emoji.
      * @param emojiCode Código del emoji.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    public void enviarEmoji(ContactoIndividual contactoDestino, int emojiCode) throws DAOExcepcion {
+    public void enviarEmoji(Contacto contactoDestino, int emojiCode) throws DAOExcepcion {
         if (usuarioActual == null) {
             throw new IllegalStateException("Debe iniciar sesión para enviar emojis.");
         }
-        if (contactoDestino == null || emojiCode < 0) { // Validación básica del código de emoji
+        if (contactoDestino == null || emojiCode < 0) {
             throw new IllegalArgumentException("Contacto y código de emoji válido son obligatorios.");
         }
 
-        // 1. Crear y enviar mensaje ENVIADO (Emoji)
-        Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
-        persistirMensaje(contactoDestino, msgEnviado);
+        if (contactoDestino instanceof Grupo) {
+            for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
+                Mensaje msgGrupo = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
+            }
+        } else {
+            Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
+        }
     }
 
     /**
@@ -186,12 +202,20 @@ public enum AppChat {
      * @param msgEnviado El mensaje ya marcado como ENVIADO.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado) throws DAOExcepcion {
+    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado, boolean guardarEnRemitente) throws DAOExcepcion {
         // Persistir el mensaje enviado
         mensajeDAO.registrarMensaje(msgEnviado);
         // Añadir al contacto del remitente y actualizar en persistencia
         contactoDestino.agregarMensaje(msgEnviado);
         contactoIndividualDAO.modificarContactoIndividual(contactoDestino);
+
+        if (guardarEnRemitente && usuarioActual != null) {
+            ContactoIndividual miContacto = usuarioActual.buscarContactoIndividualPorMovil(contactoDestino.getUsuario().getMovil());
+            if (miContacto != null) {
+                miContacto.agregarMensaje(msgEnviado);
+                contactoIndividualDAO.modificarContactoIndividual(miContacto);
+            }
+        }
 
         // 2. Simular recepción en el otro usuario
         Usuario receptor = usuarioDAO.recuperarUsuarioPorMovil(contactoDestino.getMovil());
@@ -224,12 +248,70 @@ public enum AppChat {
     }
 
    /**
+    * Crea un nuevo grupo y lo añade a la lista de contactos del usuario actual.
+    * @param nombre Nombre del grupo (obligatorio).
+    * @param miembros Lista de contactos individuales que serán miembros del grupo.
+    * @return true si el grupo se creó correctamente, false si el nombre es inválido o no hay usuario logueado.
+    * @throws DAOExcepcion Si ocurre un error de persistencia.
+    * @throws IllegalArgumentException Si el nombre es nulo o vacío.
+    */
+    public boolean crearGrupo(String nombre, List<ContactoIndividual> miembros) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para crear un grupo.");
+        }
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del grupo no puede estar vacío.");
+        }
+        // Crear el grupo
+        Grupo grupo = new Grupo(nombre, miembros);
+        // Persistir el grupo
+        grupoDAO.registrarGrupo(grupo);
+        // Añadir el grupo a los contactos del usuario actual
+        usuarioActual.agregarContacto(grupo);
+        // Actualizar el usuario en la persistencia
+        usuarioDAO.modificarUsuario(usuarioActual);
+        return true;
+    }
+
+    public boolean modificarGrupo(Grupo g) throws DAOExcepcion {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para modificar un grupo.");
+        }
+        if (g == null || g.getNombre() == null || g.getNombre().isBlank()) {
+            throw new IllegalArgumentException("El grupo y su nombre no pueden estar vacíos.");
+        }
+        // Actualizar el grupo en la persistencia
+        grupoDAO.modificarGrupo(g);
+        return true;
+    }
+
+   /**
     * Obtiene el usuario que ha iniciado sesión actualmente.
     * @return El Usuario actual, o null si nadie ha iniciado sesión.
     */
    public Usuario getUsuarioActual() {
        return usuarioActual;
    }
+
+   public List<Contacto> getContactosUsuarioActual(){
+         if (usuarioActual == null) {
+              throw new IllegalStateException("Debe iniciar sesión para obtener los contactos.");
+         }
+         return usuarioActual.getContactos();
+   }
+
+   public List<ContactoIndividual> getContactosDisponiblesParaGrupo(Grupo grupo) {
+        return getContactosUsuarioActual().stream()
+                .filter(contacto -> contacto instanceof ContactoIndividual)
+                .map(contacto -> (ContactoIndividual) contacto)
+                .filter(ci -> (grupo == null || !grupo.esMiembro(ci)) && 
+                             ci.getNombre() != null && !ci.getNombre().isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<ContactoIndividual> getMiembrosGrupo(Grupo grupo) {
+        return grupo != null ? grupo.getMiembros() : new ArrayList<>();
+    }
 
    /**
     * Cierra la sesión del usuario actual.

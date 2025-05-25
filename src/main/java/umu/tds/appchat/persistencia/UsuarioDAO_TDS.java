@@ -3,7 +3,6 @@ package umu.tds.appchat.persistencia;
 import umu.tds.appchat.dao.DAOExcepcion;
 import umu.tds.appchat.dao.UsuarioDAO;
 import umu.tds.appchat.modelo.Contacto;
-import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Usuario;
 import tds.driver.FactoriaServicioPersistencia;
 import tds.driver.ServicioPersistencia;
@@ -25,6 +24,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
     private PoolUsuarios poolUsuarios;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private ContactoIndividualDAO_TDS contactoIndividualDAO;
+    private GrupoDAO_TDS grupoDAO;
 
     public UsuarioDAO_TDS() {
         servPersistencia = FactoriaServicioPersistencia.getInstance().getServicioPersistencia();
@@ -33,6 +33,10 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
 
     public void setContactoIndividualDAO(ContactoIndividualDAO_TDS dao) {
         this.contactoIndividualDAO = dao;
+    }
+
+    public void setGrupoDAO(GrupoDAO_TDS dao) {
+        this.grupoDAO = dao;
     }
 
     /**
@@ -127,16 +131,27 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
             for (String idStr : idsList) {
                 try {
                     int contactoId = Integer.parseInt(idStr.trim());
-                    ContactoIndividual contacto = contactoIndividualDAO.recuperarContactoIndividual(contactoId);
+                    Entidad entidadContacto = servPersistencia.recuperarEntidad(contactoId);
+                    if (entidadContacto == null) {
+                        System.err.println("Advertencia: No existe entidad con ID " + contactoId + " para el usuario " + usuario.getId());
+                        continue;
+                    }
+                    String tipo = entidadContacto.getNombre();
+                    Contacto contacto = null;
+                    if ("ContactoIndividual".equals(tipo)) {
+                        contacto = contactoIndividualDAO.recuperarContactoIndividual(contactoId);
+                    } else if ("Grupo".equals(tipo) && grupoDAO != null) {
+                        contacto = grupoDAO.recuperarGrupo(contactoId);
+                    }
                     if (contacto != null) {
                         contactos.add(contacto);
                     } else {
-                        System.err.println("Advertencia: No se pudo recuperar el contacto con ID " + contactoId + " para el usuario " + usuario.getId());
+                        System.err.println("Advertencia: No se pudo recuperar el contacto/grupo con ID " + contactoId + " para el usuario " + usuario.getId());
                     }
                 } catch (NumberFormatException e) {
                     System.err.println("Error parseando ID de contacto: " + idStr + " para usuario " + usuario.getId());
                 } catch (DAOExcepcion e) {
-                    System.err.println("Error DAO al recuperar contacto con ID " + idStr + " para usuario " + usuario.getId() + ": " + e.getMessage());
+                    System.err.println("Error DAO al recuperar contacto/grupo con ID " + idStr + " para usuario " + usuario.getId() + ": " + e.getMessage());
                 }
             }
             usuario.setContactos(contactos);
