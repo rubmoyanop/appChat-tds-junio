@@ -15,6 +15,8 @@ import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.vista.componentes.ContactoGrupoCellRenderer;
 import umu.tds.appchat.vista.componentes.ListaContactosPanel;
+import umu.tds.appchat.vista.componentes.ModeloTablaContactos; 
+
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -103,6 +105,13 @@ public class VentanaPrincipal implements Ventana {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mostrarDialogoCrearGrupo();
+            }
+        });
+
+        btnVerContactos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarListaContactos();
             }
         });
 
@@ -504,6 +513,52 @@ public class VentanaPrincipal implements Ventana {
         });
 
         dialogoModificarGrupo.setVisible(true);
+    }
+
+
+
+    private void mostrarListaContactos() {
+        JDialog dialogoContactos = new JDialog(frame, "Lista de Contactos y Grupos", true);
+        dialogoContactos.setSize(600, 400);
+        dialogoContactos.setLocationRelativeTo(frame);
+        dialogoContactos.setLayout(new BorderLayout(10, 10));
+
+        // Obtener todos los contactos (individuales y grupos)
+        List<Contacto> todosLosContactos = AppChat.INSTANCE.getContactosUsuarioActual();
+        ModeloTablaContactos tableModel = new ModeloTablaContactos(todosLosContactos);
+        JTable tablaContactos = new JTable(tableModel);
+        tablaContactos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaContactos.setFillsViewportHeight(true);
+
+        tablaContactos.getSelectionModel().addListSelectionListener(event -> {
+            if (!event.getValueIsAdjusting() && tablaContactos.getSelectedRow() != -1) {
+                Contacto seleccionado = tableModel.getContactoAt(tablaContactos.getSelectedRow());
+                if (seleccionado != null) {
+
+                    // Actualizar la lista principal de contactos para que el seleccionado aparezca si es necesario
+                    // y para asegurar que la JList en PanelContactos está actualizada.
+                    panelContactos.actualizarListaContactos();
+                    
+                    // Seleccionar el contacto en la JList del PanelContactos principal
+                    panelContactos.getContactosList().setSelectedValue(seleccionado, true);
+
+                    dialogoContactos.dispose();
+                }
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(tablaContactos);
+        dialogoContactos.add(scrollPane, BorderLayout.CENTER);
+
+        // Botón de cerrar
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotones.setBorder(new EmptyBorder(0, 10, 10, 10));
+        JButton btnCerrar = new JButton("Cerrar");
+        btnCerrar.addActionListener(e -> dialogoContactos.dispose());
+        panelBotones.add(btnCerrar);
+        dialogoContactos.add(panelBotones, BorderLayout.SOUTH);
+
+        dialogoContactos.setVisible(true);
     }
 
     @Override
