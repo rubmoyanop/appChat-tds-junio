@@ -115,6 +115,13 @@ public class VentanaPrincipal implements Ventana {
             }
         });
 
+        btnBuscarMensajes.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoBuscarMensajes();
+            }
+        });
+
         btnModificarGrupo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -560,6 +567,91 @@ public class VentanaPrincipal implements Ventana {
 
         dialogoContactos.setVisible(true);
     }
+
+    private void mostrarDialogoBuscarMensajes() {
+        JDialog dialogoBuscarMensajes = new JDialog(frame, "Buscar Mensajes", true); 
+        dialogoBuscarMensajes.setSize(800, 550);
+        dialogoBuscarMensajes.setLocationRelativeTo(frame);
+        dialogoBuscarMensajes.setLayout(new BorderLayout(10, 10));
+
+        // Panel superior para los filtros
+        JPanel panelFiltros = new JPanel(new GridBagLayout());
+        panelFiltros.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Filtros de Búsqueda"),
+                new EmptyBorder(5, 10, 10, 10) 
+        ));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); 
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        //JTextField para texto
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panelFiltros.add(new JLabel("Texto:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0; 
+        gbc.gridwidth = 4; 
+        JTextField txtFiltroTexto = new JTextField();
+        panelFiltros.add(txtFiltroTexto, gbc);
+        gbc.gridwidth = 1;
+
+        // Fila 1: JTextField para contacto, JTextField para telefono y botón de Buscar
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.0; // Reset weightx for label
+        panelFiltros.add(new JLabel("Contacto:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 0.4; 
+        JTextField txtFiltroContacto = new JTextField();
+        panelFiltros.add(txtFiltroContacto, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.0; 
+        panelFiltros.add(new JLabel("Teléfono:"), gbc);
+
+        gbc.gridx = 3;
+        gbc.gridy = 1;
+        gbc.weightx = 0.4; 
+        JTextField txtFiltroTelefono = new JTextField();
+        panelFiltros.add(txtFiltroTelefono, gbc);
+
+        gbc.gridx = 4;
+        gbc.gridy = 1;
+        gbc.weightx = 0.2; 
+        gbc.fill = GridBagConstraints.NONE; 
+        gbc.anchor = GridBagConstraints.EAST; 
+        JButton btnEjecutarBusqueda = new JButton("Buscar");
+        panelFiltros.add(btnEjecutarBusqueda, gbc);
+        
+        // Añadir el panel de filtros al norte del diálogo
+        dialogoBuscarMensajes.add(panelFiltros, BorderLayout.NORTH);
+
+        // Panel de resultados (ocupará el centro)
+        JPanel panelResultadosPlaceholder = new JPanel();
+        panelResultadosPlaceholder.setBorder(BorderFactory.createTitledBorder("Resultados"));
+        panelResultadosPlaceholder.add(new JLabel("Los resultados aparecerán aquí."));
+        dialogoBuscarMensajes.add(panelResultadosPlaceholder, BorderLayout.CENTER);
+        
+        JPanel panelBotonesInferiores = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.addActionListener(e -> dialogoBuscarMensajes.dispose());
+        panelBotonesInferiores.add(btnCancelar);
+        dialogoBuscarMensajes.add(panelBotonesInferiores, BorderLayout.SOUTH);
+
+        btnEjecutarBusqueda.addActionListener(e -> {
+            
+        });
+
+        dialogoBuscarMensajes.setVisible(true);
+    }   
 
     @Override
     public JFrame getPanelPrincipal() {
