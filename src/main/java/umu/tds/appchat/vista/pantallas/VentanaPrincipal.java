@@ -13,8 +13,10 @@ import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
+import umu.tds.appchat.modelo.ResultadoBusqueda;
 import umu.tds.appchat.vista.componentes.ContactoGrupoCellRenderer;
 import umu.tds.appchat.vista.componentes.ListaContactosPanel;
+import umu.tds.appchat.vista.componentes.MensajeListCellRenderer;
 import umu.tds.appchat.vista.componentes.ModeloTablaContactos; 
 
 
@@ -635,9 +637,22 @@ public class VentanaPrincipal implements Ventana {
         dialogoBuscarMensajes.add(panelFiltros, BorderLayout.NORTH);
 
         // Panel de resultados (ocupará el centro)
-        JPanel panelResultados = new JPanel();
+        JPanel panelResultados = new JPanel(new BorderLayout());
         panelResultados.setBorder(BorderFactory.createTitledBorder("Resultados"));
-        panelResultados.add(new JLabel("Los resultados aparecerán aquí."));
+        
+        DefaultListModel<ResultadoBusqueda> modeloResultados = new DefaultListModel<>();
+        JList<ResultadoBusqueda> listaResultados = new JList<>(modeloResultados);
+        
+        // Usar el constructor especial para contexto de búsqueda
+        listaResultados.setCellRenderer(new MensajeListCellRenderer());
+        listaResultados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        JScrollPane scrollResultados = new JScrollPane(listaResultados);
+        scrollResultados.setPreferredSize(new Dimension(750, 300));
+        
+        panelResultados.add(new JLabel("Los resultados aparecerán aquí cuando ejecute una búsqueda."), BorderLayout.NORTH);
+        panelResultados.add(scrollResultados, BorderLayout.CENTER);
+        
         dialogoBuscarMensajes.add(panelResultados, BorderLayout.CENTER);
         
         JPanel panelBotonesInferiores = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -647,7 +662,53 @@ public class VentanaPrincipal implements Ventana {
         dialogoBuscarMensajes.add(panelBotonesInferiores, BorderLayout.SOUTH);
 
         btnEjecutarBusqueda.addActionListener(e -> {
+            String textoFiltro = txtFiltroTexto.getText().trim();
+            String contactoFiltro = txtFiltroContacto.getText().trim();
+            String telefonoFiltro = txtFiltroTelefono.getText().trim();
             
+            // Combinar filtro de contacto y teléfono si ambos están presentes
+            String filtroContactoCompleto = null;
+            if (!contactoFiltro.isEmpty() && !telefonoFiltro.isEmpty()) {
+                filtroContactoCompleto = contactoFiltro + " " + telefonoFiltro;
+            } else if (!contactoFiltro.isEmpty()) {
+                filtroContactoCompleto = contactoFiltro;
+            } else if (!telefonoFiltro.isEmpty()) {
+                filtroContactoCompleto = telefonoFiltro;
+            }
+            
+            try {
+                List<ResultadoBusqueda> resultados = AppChat.INSTANCE.buscarMensajes(
+                    textoFiltro.isEmpty() ? null : textoFiltro,
+                    filtroContactoCompleto
+                );
+                
+                // Limpiar resultados anteriores
+                modeloResultados.clear();
+                
+                // Agregar nuevos resultados
+                for (ResultadoBusqueda resultado : resultados) {
+                    modeloResultados.addElement(resultado);
+                }
+                
+                // Actualizar el texto informativo
+                if (resultados.isEmpty()) {
+                    panelResultados.remove(0);
+                    panelResultados.add(new JLabel("No se encontraron mensajes con los filtros aplicados."), BorderLayout.NORTH, 0);
+                } else {
+                    panelResultados.remove(0);
+                    panelResultados.add(new JLabel("Se encontraron " + resultados.size() + " mensaje(s):"), BorderLayout.NORTH, 0);
+                }
+                
+                panelResultados.revalidate();
+                panelResultados.repaint();
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogoBuscarMensajes, 
+                    "Error al buscar mensajes: " + ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         dialogoBuscarMensajes.setVisible(true);
