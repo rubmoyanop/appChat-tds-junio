@@ -3,42 +3,43 @@ package umu.tds.appchat.vista.componentes;
 import javax.swing.*;
 import java.awt.*;
 import umu.tds.appchat.modelo.Mensaje;
-import umu.tds.appchat.modelo.Contacto;
-import umu.tds.appchat.modelo.TipoMensaje; 
+import umu.tds.appchat.modelo.ResultadoBusqueda;
+import umu.tds.appchat.modelo.Contacto; 
 
-public class MensajeListCellRenderer extends JPanel implements ListCellRenderer<Mensaje> {
+public class MensajeListCellRenderer extends JPanel implements ListCellRenderer<Object> {
     private JLabel lblEmisor;
     private JLabel lblReceptor;
     private JLabel lblTexto;
     private JPanel pnlHeader;
-
-    private Contacto chatContact;
-
+    
+    // Constructor para chat específico
     public MensajeListCellRenderer(Contacto chatContact) {
-        if (chatContact == null) {
-            throw new IllegalArgumentException("Chat contact cannot be null.");
-        }
-        this.chatContact = chatContact;
+        initComponents();
+    }
 
-        setLayout(new BorderLayout(5, 0)); // Espacio entre cabecera y texto
-        setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8)); // Relleno para toda la celda
-        setOpaque(true); // Necesario para que los colores de fondo se pinten
+    // Constructor para contexto de búsqueda
+    public MensajeListCellRenderer() {
+        initComponents();
+    }
 
-        // Panel de cabecera para Emisor y Receptor
-        pnlHeader = new JPanel(new BorderLayout(5, 0)); // Espacio entre emisor y receptor
-        pnlHeader.setOpaque(false); // Hereda el fondo del padre
+    private void initComponents() {
+        setLayout(new BorderLayout(5, 0));
+        setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+        setOpaque(true);
+
+        pnlHeader = new JPanel(new BorderLayout(5, 0));
+        pnlHeader.setOpaque(false);
 
         lblEmisor = new JLabel();
         lblEmisor.setFont(lblEmisor.getFont().deriveFont(Font.BOLD));
         lblEmisor.setForeground(Color.DARK_GRAY);
 
         lblReceptor = new JLabel();
-        lblReceptor.setForeground(Color.GRAY); // Color ligeramente diferente para el receptor
+        lblReceptor.setForeground(Color.GRAY);
 
         pnlHeader.add(lblEmisor, BorderLayout.WEST);
         pnlHeader.add(lblReceptor, BorderLayout.EAST);
 
-        // Etiqueta de texto
         lblTexto = new JLabel();
 
         add(pnlHeader, BorderLayout.NORTH);
@@ -46,27 +47,34 @@ public class MensajeListCellRenderer extends JPanel implements ListCellRenderer<
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends Mensaje> list,
-                                                  Mensaje mensaje,
+    public Component getListCellRendererComponent(JList<?> list,
+                                                  Object value,
                                                   int index,
                                                   boolean isSelected,
                                                   boolean cellHasFocus) {
         String emisorDisplay;
         String receptorDisplay;
+        Mensaje mensaje;
 
-        // Determinar emisor y receptor según el tipo de mensaje y el contexto del usuario actual
-        if (mensaje.getTipo() == TipoMensaje.ENVIADO) { // Mensaje enviado por currentUser
-            emisorDisplay = "Yo"; // O currentUser.getNombre()
-            receptorDisplay = chatContact.getNombre();
-        } else { // Mensaje recibido por currentUser (presumiblemente de chatContact)
-            emisorDisplay = chatContact.getNombre();
-            // Si chatContact es un Grupo, emisorDisplay será el nombre del grupo.
-            // Para el nombre del remitente individual en el chat grupal, el modelo Mensaje necesitaría almacenar el remitente original.
-            receptorDisplay = "Yo"; // O currentUser.getNombre()
+        if (value instanceof ResultadoBusqueda) {
+            ResultadoBusqueda resultado = (ResultadoBusqueda) value;
+            mensaje = resultado.getMensaje();
+            emisorDisplay = resultado.getEmisor();
+            receptorDisplay = resultado.getReceptor();
+        } else {
+            // Fallback
+            lblEmisor.setText("Error");
+            lblReceptor.setText("Error");
+            lblTexto.setText("Tipo de dato no soportado");
+            return this;
         }
 
         lblEmisor.setText(emisorDisplay);
         lblReceptor.setText(receptorDisplay);
+        lblTexto.setText(mensaje.isEmoji() ? "Emoji: " + mensaje.getCodigoEmoji() : mensaje.getTexto());
+        
+        setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
+        setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
 
         return this;
     }
