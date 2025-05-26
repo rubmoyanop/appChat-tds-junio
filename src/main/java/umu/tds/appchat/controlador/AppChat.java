@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors; 
+import java.util.Comparator; 
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -337,5 +339,51 @@ public enum AppChat {
            throw new IllegalArgumentException("El contacto no puede ser nulo.");
        }
        return contacto.getNombre().equals("");
+   }
+
+   /**
+    * Busca mensajes en todos los contactos del usuario actual aplicando filtros.
+    * @param filtroTexto Texto a buscar en los mensajes (puede ser null o vacío para no filtrar por texto).
+    * @param filtroContacto Nombre o número de teléfono del contacto/grupo a filtrar (puede ser null o vacío para no filtrar por contacto).
+    * @return Lista de mensajes que coinciden con los filtros, ordenada por fecha descendente.
+    * @throws IllegalStateException Si no hay un usuario logueado.
+    */
+   public List<Mensaje> buscarMensajes(String filtroTexto, String filtroContacto) {
+       if (usuarioActual == null) {
+           throw new IllegalStateException("Debe iniciar sesión para buscar mensajes.");
+       }
+
+       String filtroTextoLower = (filtroTexto != null && !filtroTexto.isBlank()) ? filtroTexto.toLowerCase() : null;
+       String filtroContactoLower = (filtroContacto != null && !filtroContacto.isBlank()) ? filtroContacto.toLowerCase() : null;
+
+       return usuarioActual.getContactos().stream()
+           .filter(contacto -> { // Filtrar contactos
+               if (filtroContactoLower == null) {
+                   return true; // No hay filtro de contacto, incluir todos
+               }
+               boolean nombreCoincide = contacto.getNombre() != null && 
+                                        contacto.getNombre().toLowerCase().contains(filtroContactoLower);
+               if (nombreCoincide) {
+                   return true;
+               }
+               if (contacto instanceof ContactoIndividual) {
+                   ContactoIndividual ci = (ContactoIndividual) contacto;
+                   // Usamos filtroContacto original para números, ya que no puede tener mayúsculas/minúsculas.
+                   return ci.getUsuario().getMovil() != null && 
+                          ci.getUsuario().getMovil().contains(filtroContacto);
+               }
+               return false; // Solo grupos filtrados por nombre, individuos por nombre o móvil
+           })
+           .flatMap(contacto -> contacto.getMensajes().stream()) 
+           .filter(mensaje -> { // Filtrar mensajes por texto
+               if (filtroTextoLower == null) {
+                   return true; // No hay filtro de texto, incluir todos los mensajes de contactos filtrados
+               }
+               // Solo buscar en mensajes con texto. Los emojis sin texto no coincidirán.
+               return mensaje.getTexto() != null && 
+                      mensaje.getTexto().toLowerCase().contains(filtroTextoLower);
+           })
+           .sorted(Comparator.comparing(Mensaje::getFechaHora).reversed()) // Ordenar por fecha, más recientes primero
+           .collect(Collectors.toList());
    }
 }
