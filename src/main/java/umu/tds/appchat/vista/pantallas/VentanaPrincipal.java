@@ -635,10 +635,10 @@ public class VentanaPrincipal implements Ventana {
         dialogoBuscarMensajes.add(panelFiltros, BorderLayout.NORTH);
 
         // Panel de resultados (ocupará el centro)
-        JPanel panelResultadosPlaceholder = new JPanel();
-        panelResultadosPlaceholder.setBorder(BorderFactory.createTitledBorder("Resultados"));
-        panelResultadosPlaceholder.add(new JLabel("Los resultados aparecerán aquí."));
-        dialogoBuscarMensajes.add(panelResultadosPlaceholder, BorderLayout.CENTER);
+        JPanel panelResultados = new JPanel();
+        panelResultados.setBorder(BorderFactory.createTitledBorder("Resultados"));
+        panelResultados.add(new JLabel("Los resultados aparecerán aquí."));
+        dialogoBuscarMensajes.add(panelResultados, BorderLayout.CENTER);
         
         JPanel panelBotonesInferiores = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnCancelar = new JButton("Cancelar");
