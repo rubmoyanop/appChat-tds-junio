@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors; 
+import java.util.Comparator; 
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -337,5 +339,73 @@ public enum AppChat {
            throw new IllegalArgumentException("El contacto no puede ser nulo.");
        }
        return contacto.getNombre().equals("");
+   }
+
+   /**
+    * Busca mensajes en todos los contactos del usuario actual aplicando filtros.
+    * @param filtroTexto Texto a buscar en los mensajes (puede ser null o vacío para no filtrar por texto).
+    * @param filtroContacto Nombre o número de teléfono del contacto/grupo a filtrar (puede ser null o vacío para no filtrar por contacto).
+    * @return Lista de resultados de búsqueda que coinciden con los filtros, ordenada por fecha descendente.
+    * @throws IllegalStateException Si no hay un usuario logueado.
+    */
+   public List<ResultadoBusqueda> buscarMensajes(String filtroTexto, String filtroContacto, String filtroTipo) {
+       if (usuarioActual == null) {
+           throw new IllegalStateException("Debe iniciar sesión para buscar mensajes.");
+       }
+
+       String filtroTextoLower = (filtroTexto != null && !filtroTexto.isBlank()) ? filtroTexto.toLowerCase() : null;
+       String filtroContactoLower = (filtroContacto != null && !filtroContacto.isBlank()) ? filtroContacto.toLowerCase() : null;
+
+       return usuarioActual.getContactos().stream()
+           .filter(contacto -> { // Filtra por contactos
+               if (filtroContactoLower == null) {
+                   return true; 
+               }
+               boolean nombreCoincide = contacto.getNombre() != null && 
+                                        contacto.getNombre().toLowerCase().contains(filtroContactoLower);
+               if (nombreCoincide) {
+                   return true;
+               }
+               if (contacto instanceof ContactoIndividual) {
+                   ContactoIndividual ci = (ContactoIndividual) contacto;
+                   return ci.getUsuario().getMovil() != null && 
+                          ci.getUsuario().getMovil().contains(filtroContacto);
+               }
+               return false; 
+           })
+           .flatMap(contacto -> contacto.getMensajes().stream()
+               .filter(mensaje -> { // Filtro por texto
+                if (filtroTextoLower == null) {
+                    return true; 
+                }
+                return mensaje.getTexto() != null && 
+                        mensaje.getTexto().toLowerCase().contains(filtroTextoLower);
+               })
+               .filter(mensaje -> { // Filtro por tipo de mensaje
+                   if (filtroTipo == null || filtroTipo.isBlank()) {
+                       return true; 
+                   }
+                   TipoMensaje tipo = TipoMensaje.valueOf(filtroTipo.toUpperCase());
+                   return mensaje.getTipo() == tipo;
+               })
+               .map(mensaje -> { // Convertir a objeto de tipo ResultadoBusqueda
+                    String nombreMostradoContacto;
+                    if (contacto instanceof ContactoIndividual) {
+                        ContactoIndividual ci = (ContactoIndividual) contacto;
+                        nombreMostradoContacto = ci.getNombre().isEmpty() ? ci.getUsuario().getMovil() : ci.getNombre();
+                    } else if (contacto instanceof Grupo) {
+                        nombreMostradoContacto = contacto.getNombre();
+                    } else {
+                        nombreMostradoContacto = ""; 
+                    }
+                
+                    String emisor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? "Yo" : nombreMostradoContacto;
+                    String receptor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? nombreMostradoContacto : "Yo";
+                    
+                    return new ResultadoBusqueda(mensaje, emisor, receptor, contacto); // MODIFIED: Pass 'contacto'
+                })
+           )
+           .sorted(Comparator.comparing((ResultadoBusqueda r) -> r.getMensaje().getFechaHora()).reversed()) // Ordenar por fecha, más recientes primero
+           .collect(Collectors.toList());
    }
 }
