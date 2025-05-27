@@ -383,21 +383,26 @@ public enum AppChat {
                })
                .filter(mensaje -> { // Filtro por tipo de mensaje
                    if (filtroTipo == null || filtroTipo.isBlank()) {
-                       return true; // No filtrar por tipo
+                       return true; 
                    }
                    TipoMensaje tipo = TipoMensaje.valueOf(filtroTipo.toUpperCase());
                    return mensaje.getTipo() == tipo;
                })
-                // Convertir a ResultadoBusqueda
                .map(mensaje -> { // Convertir a objeto de tipo ResultadoBusqueda
-                    String nombreContacto;
-                    ContactoIndividual ci = (ContactoIndividual) contacto;
-                    nombreContacto = ci.getNombre().isEmpty() ? ci.getUsuario().getMovil() : ci.getNombre();
+                    String nombreMostradoContacto;
+                    if (contacto instanceof ContactoIndividual) {
+                        ContactoIndividual ci = (ContactoIndividual) contacto;
+                        nombreMostradoContacto = ci.getNombre().isEmpty() ? ci.getUsuario().getMovil() : ci.getNombre();
+                    } else if (contacto instanceof Grupo) {
+                        nombreMostradoContacto = contacto.getNombre();
+                    } else {
+                        nombreMostradoContacto = ""; 
+                    }
                 
-                    String emisor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? "Yo" : nombreContacto;
-                    String receptor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? nombreContacto : "Yo";
+                    String emisor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? "Yo" : nombreMostradoContacto;
+                    String receptor = (mensaje.getTipo() == TipoMensaje.ENVIADO) ? nombreMostradoContacto : "Yo";
                     
-                    return new ResultadoBusqueda(mensaje, emisor, receptor);
+                    return new ResultadoBusqueda(mensaje, emisor, receptor, contacto); // MODIFIED: Pass 'contacto'
                 })
            )
            .sorted(Comparator.comparing((ResultadoBusqueda r) -> r.getMensaje().getFechaHora()).reversed()) // Ordenar por fecha, más recientes primero
