@@ -661,6 +661,21 @@ public class VentanaPrincipal implements Ventana {
         listaResultados.setCellRenderer(new MensajeListCellRenderer());
         listaResultados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
+        // Ir al chat del mensaje seleccionado
+        listaResultados.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && listaResultados.getSelectedValue() != null) {
+                ResultadoBusqueda resultadoSeleccionado = listaResultados.getSelectedValue();
+                Contacto contactoDelResultado = resultadoSeleccionado.getContacto();
+
+                // Cerrar el diálogo de búsqueda
+                dialogoBuscarMensajes.dispose();
+
+                // Actualizar la lista de contactos principal y seleccionar el contacto
+                panelContactos.actualizarListaContactos(); 
+                panelContactos.getContactosList().setSelectedValue(contactoDelResultado, true);
+            }
+        });
+        
         JScrollPane scrollResultados = new JScrollPane(listaResultados);
         scrollResultados.setPreferredSize(new Dimension(750, 300));
         
