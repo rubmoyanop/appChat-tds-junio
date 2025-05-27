@@ -595,21 +595,21 @@ public class VentanaPrincipal implements Ventana {
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 1.0; 
-        gbc.gridwidth = 4; 
+        gbc.gridwidth = 6; 
         JTextField txtFiltroTexto = new JTextField();
         panelFiltros.add(txtFiltroTexto, gbc);
-        gbc.gridwidth = 1;
+        gbc.gridwidth = 1; 
 
         // Fila 1: JTextField para contacto, JTextField para telefono y botón de Buscar
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
-        gbc.weightx = 0.0; // Reset weightx for label
+        gbc.weightx = 0.0; 
         panelFiltros.add(new JLabel("Contacto:"), gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 1;
-        gbc.weightx = 0.4; 
+        gbc.weightx = 0.3; 
         JTextField txtFiltroContacto = new JTextField();
         panelFiltros.add(txtFiltroContacto, gbc);
 
@@ -621,13 +621,27 @@ public class VentanaPrincipal implements Ventana {
 
         gbc.gridx = 3;
         gbc.gridy = 1;
-        gbc.weightx = 0.4; 
+        gbc.weightx = 0.3; 
         JTextField txtFiltroTelefono = new JTextField();
         panelFiltros.add(txtFiltroTelefono, gbc);
 
         gbc.gridx = 4;
         gbc.gridy = 1;
-        gbc.weightx = 0.2; 
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.0;
+        panelFiltros.add(new JLabel("Tipo Mensaje:"), gbc);
+
+        gbc.gridx = 5;
+        gbc.gridy = 1;
+        gbc.weightx = 0.3; 
+        String[] tiposMensajeOpciones = {"AMBOS", "ENVIADO", "RECIBIDO"};
+        JComboBox<String> comboTipoMensaje = new JComboBox<>(tiposMensajeOpciones);
+        comboTipoMensaje.setSelectedItem("AMBOS");
+        panelFiltros.add(comboTipoMensaje, gbc);
+        
+        gbc.gridx = 6; 
+        gbc.gridy = 1;
+        gbc.weightx = 0.1; 
         gbc.fill = GridBagConstraints.NONE; 
         gbc.anchor = GridBagConstraints.EAST; 
         JButton btnEjecutarBusqueda = new JButton("Buscar");
@@ -665,6 +679,7 @@ public class VentanaPrincipal implements Ventana {
             String textoFiltro = txtFiltroTexto.getText().trim();
             String contactoFiltro = txtFiltroContacto.getText().trim();
             String telefonoFiltro = txtFiltroTelefono.getText().trim();
+            String tipoMensajeSeleccionado = (String) comboTipoMensaje.getSelectedItem(); 
             
             // Combinar filtro de contacto y teléfono si ambos están presentes
             String filtroContactoCompleto = null;
