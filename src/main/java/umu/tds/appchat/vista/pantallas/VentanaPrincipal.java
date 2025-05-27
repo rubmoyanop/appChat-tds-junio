@@ -694,7 +694,8 @@ public class VentanaPrincipal implements Ventana {
             try {
                 List<ResultadoBusqueda> resultados = AppChat.INSTANCE.buscarMensajes(
                     textoFiltro.isEmpty() ? null : textoFiltro,
-                    filtroContactoCompleto
+                    filtroContactoCompleto,
+                    tipoMensajeSeleccionado.equals("AMBOS") ? null : tipoMensajeSeleccionado
                 );
                 
                 // Limpiar resultados anteriores
