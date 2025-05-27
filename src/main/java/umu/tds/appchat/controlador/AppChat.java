@@ -348,7 +348,7 @@ public enum AppChat {
     * @return Lista de resultados de búsqueda que coinciden con los filtros, ordenada por fecha descendente.
     * @throws IllegalStateException Si no hay un usuario logueado.
     */
-   public List<ResultadoBusqueda> buscarMensajes(String filtroTexto, String filtroContacto) {
+   public List<ResultadoBusqueda> buscarMensajes(String filtroTexto, String filtroContacto, String filtroTipo) {
        if (usuarioActual == null) {
            throw new IllegalStateException("Debe iniciar sesión para buscar mensajes.");
        }
@@ -381,6 +381,14 @@ public enum AppChat {
                 return mensaje.getTexto() != null && 
                         mensaje.getTexto().toLowerCase().contains(filtroTextoLower);
                })
+               .filter(mensaje -> { // Filtro por tipo de mensaje
+                   if (filtroTipo == null || filtroTipo.isBlank()) {
+                       return true; // No filtrar por tipo
+                   }
+                   TipoMensaje tipo = TipoMensaje.valueOf(filtroTipo.toUpperCase());
+                   return mensaje.getTipo() == tipo;
+               })
+                // Convertir a ResultadoBusqueda
                .map(mensaje -> { // Convertir a objeto de tipo ResultadoBusqueda
                     String nombreContacto;
                     ContactoIndividual ci = (ContactoIndividual) contacto;
