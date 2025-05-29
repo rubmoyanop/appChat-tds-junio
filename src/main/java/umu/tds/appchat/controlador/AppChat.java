@@ -6,13 +6,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors; 
-import java.util.Comparator; 
+import java.util.Comparator;
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
 public enum AppChat {
     INSTANCE;
    public static double COSTE_PREMIUM = 100.0;
+   public static TipoDescuento DESCUENTO_POR_DEFECTO = TipoDescuento.COMBINADO; 
    public static final String DAO_TDS = "umu.tds.appchat.persistencia.FactoriaDAO_TDS";
    private FactoriaDAO factoriaDAO;
    private UsuarioDAO usuarioDAO;
@@ -20,7 +21,7 @@ public enum AppChat {
    private GrupoDAO grupoDAO;
    private MensajeDAO mensajeDAO;
    private Usuario usuarioActual;
-   
+
    private AppChat() {
     try {
         factoriaDAO = FactoriaDAO.getInstancia(DAO_TDS);
@@ -77,8 +78,10 @@ public enum AppChat {
                                                      .atZone(ZoneId.systemDefault())
                                                      .toLocalDate();
 
+        LocalDate fechaRegistro = LocalDate.now(); 
+
         // Creamos y registramos el usuario
-        Usuario usuario = new Usuario(nombre, email, fechaNacimientoLocalDate, movil, contrasena, imagen, saludo, isPremium);
+        Usuario usuario = new Usuario(nombre, email, fechaNacimientoLocalDate, fechaRegistro, movil, contrasena, imagen, saludo, isPremium);
         usuarioDAO.registrarUsuario(usuario); // Lanza DAOExcepcion si falla la persistencia
         return true; // Indica que el registro fue exitoso
     }
@@ -407,5 +410,48 @@ public enum AppChat {
            )
            .sorted(Comparator.comparing((ResultadoBusqueda r) -> r.getMensaje().getFechaHora()).reversed()) // Ordenar por fecha, más recientes primero
            .collect(Collectors.toList());
+   }
+   
+   /**
+    * Convierte al usuario actual en premium aplicando descuentos automáticos.
+    * @return El coste final aplicado después de descuentos.
+    * @throws IllegalStateException Si no hay usuario logueado o ya es premium.
+    * @throws DAOExcepcion Si ocurre un error de persistencia.
+    */
+   public double hacerPremium() throws DAOExcepcion {
+       if (usuarioActual == null) {
+           throw new IllegalStateException("Debe iniciar sesión para convertirse en premium.");
+       }
+       if (usuarioActual.isPremium()) {
+           throw new IllegalStateException("El usuario ya es premium.");
+       }
+       
+       Descuento estrategiaDescuento = FactoriaDescuentos.crearDescuento(DESCUENTO_POR_DEFECTO);
+       double porcentajeDescuento = estrategiaDescuento.calcularDescuento(usuarioActual);
+       double costeFinal = COSTE_PREMIUM * (1 - porcentajeDescuento);
+       
+       usuarioActual.setPremium(true);
+       
+       usuarioDAO.modificarUsuario(usuarioActual);
+       
+       return costeFinal;
+   }
+   
+   /**
+    * Cancela la suscripción premium del usuario actual.
+    * @throws IllegalStateException Si no hay usuario logueado o no es premium.
+    * @throws DAOExcepcion Si ocurre un error de persistencia.
+    */
+   public void cancelarPremium() throws DAOExcepcion {
+       if (usuarioActual == null) {
+           throw new IllegalStateException("Debe iniciar sesión para cancelar premium.");
+       }
+       if (!usuarioActual.isPremium()) {
+           throw new IllegalStateException("El usuario no es premium actualmente.");
+       }
+       
+       usuarioActual.setPremium(false);
+       
+       usuarioDAO.modificarUsuario(usuarioActual);
    }
 }
