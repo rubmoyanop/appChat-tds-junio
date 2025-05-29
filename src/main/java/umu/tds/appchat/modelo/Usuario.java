@@ -13,11 +13,12 @@ public class Usuario {
     private String contrasena;
     private String imagen;
     private LocalDate fechaNacimiento;
+    private LocalDate fechaRegistro;
     private String saludo;
     private boolean isPremium;
     private List<Contacto> contactos;
 
-    public Usuario(String nombre, String email, LocalDate fechaNacimiento, String movil, String contrasena, String imagen, String saludo, boolean isPremium) {
+    public Usuario(String nombre, String email, LocalDate fechaNacimiento, LocalDate fechaRegistro, String movil, String contrasena, String imagen, String saludo, boolean isPremium) {
         this.id = 0;
         this.nombre = nombre;
         this.email = email;
@@ -25,6 +26,7 @@ public class Usuario {
         this.contrasena = contrasena;
         this.imagen = imagen;
         this.fechaNacimiento = fechaNacimiento;
+        this.fechaRegistro = fechaRegistro;
         this.saludo = saludo;
         this.contactos = new LinkedList<>();
         this.isPremium = isPremium;
@@ -94,6 +96,14 @@ public class Usuario {
 
     public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public LocalDate getFechaRegistro() {
+        return this.fechaRegistro;
+    }
+
+    public void setFechaRegistro(LocalDate fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 
     public String getSaludo() {
