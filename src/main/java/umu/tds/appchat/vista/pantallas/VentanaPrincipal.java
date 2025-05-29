@@ -117,6 +117,13 @@ public class VentanaPrincipal implements Ventana {
             }
         });
 
+        btnPremium.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoPremium();
+            }
+        });
+
         btnBuscarMensajes.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -757,6 +764,7 @@ public class VentanaPrincipal implements Ventana {
             lblNombreUsuario.setText(usuario.getNombre());
             lblFotoUsuario.setText("Foto");
             lblFotoUsuario.setIcon(null);
+            actualizarEstadoPremium(); 
         } else {
             lblNombreUsuario.setText("Usuario Desconocido");
             lblFotoUsuario.setText("Foto");
@@ -783,6 +791,156 @@ public class VentanaPrincipal implements Ventana {
             if(AppChat.INSTANCE.esDesconocido(contactoSeleccionado)) mostrarDialogoCambiarNombreContacto();
         } else {
             panelMensajes.setContactoDestino(null);
+        }
+    }
+
+    private void mostrarDialogoPremium() {
+        Usuario usuario = AppChat.INSTANCE.getUsuarioActual();
+        if (usuario == null) {
+            JOptionPane.showMessageDialog(frame, "Error: Usuario no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (usuario.isPremium()) {
+            // Usuario ya es Premium - mostrar opciones de cancelación
+            mostrarDialogoCancelarPremium();
+            return;
+        }
+
+        // Usuario no es Premium - mostrar diálogo de compra
+        JDialog dialogoPremium = new JDialog(frame, "Suscripción Premium", true);
+        dialogoPremium.setSize(450, 300);
+        dialogoPremium.setLocationRelativeTo(frame);
+        dialogoPremium.setLayout(new BorderLayout(10, 10));
+
+        // Panel principal con información
+        JPanel panelInfo = new JPanel();
+        panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
+        panelInfo.setBorder(new EmptyBorder(20, 20, 10, 20));
+
+        JLabel lblTitulo = new JLabel("¡Hazte Premium!");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelInfo.add(lblTitulo);
+
+        panelInfo.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        // Calcular coste con descuentos 
+        try {
+            double[] infoCoste = AppChat.INSTANCE.getCostePremiumConDescuento();
+            double costeOriginal = infoCoste[0];
+            double porcentajeDescuento = infoCoste[1];
+            double costeFinal = infoCoste[2];
+
+            JPanel panelCoste = new JPanel();
+            panelCoste.setLayout(new BoxLayout(panelCoste, BoxLayout.Y_AXIS));
+            panelCoste.setOpaque(false);
+
+            if (porcentajeDescuento > 0) {
+                JLabel lblOriginal = new JLabel(String.format("Precio original: %.2f€", costeOriginal));
+                lblOriginal.setFont(lblOriginal.getFont().deriveFont(Font.PLAIN));
+                lblOriginal.setForeground(Color.GRAY);
+                lblOriginal.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                JLabel lblDescuento = new JLabel(String.format("Descuento aplicado: %.0f%%", porcentajeDescuento * 100));
+                lblDescuento.setFont(lblDescuento.getFont().deriveFont(Font.PLAIN));
+                lblDescuento.setForeground(new Color(34, 139, 34));
+                lblDescuento.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                JLabel lblFinal = new JLabel(String.format("Precio final: %.2f€", costeFinal));
+                lblFinal.setFont(lblFinal.getFont().deriveFont(Font.BOLD));
+                lblFinal.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                panelCoste.add(lblOriginal);
+                panelCoste.add(lblDescuento);
+                panelCoste.add(lblFinal);
+            } else {
+                JLabel lblFinal = new JLabel(String.format("Precio: %.2f€", costeFinal));
+                lblFinal.setFont(lblFinal.getFont().deriveFont(Font.BOLD));
+                lblFinal.setAlignmentX(Component.CENTER_ALIGNMENT);
+                panelCoste.add(lblFinal);
+            }
+            panelInfo.add(panelCoste);
+
+        } catch (Exception e) {
+            JLabel lblCoste = new JLabel(String.format("Precio: %.2f€", AppChat.COSTE_PREMIUM));
+            lblCoste.setFont(lblCoste.getFont().deriveFont(Font.BOLD));
+            lblCoste.setAlignmentX(Component.CENTER_ALIGNMENT);
+            panelInfo.add(lblCoste);
+        }
+
+        dialogoPremium.add(panelInfo, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        panelBotones.setBorder(new EmptyBorder(0, 20, 20, 20));
+
+        JButton btnPagar = new JButton("Pagar y Activar Premium");
+        btnPagar.setFont(new Font("Arial", Font.BOLD, 14));
+        btnPagar.setBackground(new Color(255, 215, 0)); 
+        btnPagar.setForeground(Color.BLACK); 
+        btnPagar.setFocusPainted(false);
+        btnPagar.addActionListener(e -> {
+            try {
+                double costeReal = AppChat.INSTANCE.hacerPremium();
+                JOptionPane.showMessageDialog(dialogoPremium, 
+                        String.format("¡Felicitaciones! Ahora eres usuario Premium.\nCoste final: %.2f€", costeReal),
+                        "Premium Activado", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                dialogoPremium.dispose();
+                actualizarEstadoPremium(); 
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogoPremium,
+                        "Error al procesar el pago: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.addActionListener(e -> dialogoPremium.dispose());
+
+        panelBotones.add(btnPagar);
+        panelBotones.add(btnCancelar);
+        dialogoPremium.add(panelBotones, BorderLayout.SOUTH);
+
+        dialogoPremium.setVisible(true);
+    }
+
+    private void mostrarDialogoCancelarPremium() {
+        int opcion = JOptionPane.showConfirmDialog(frame,
+                "Actualmente eres usuario Premium.\n¿Deseas cancelar tu suscripción?",
+                "Cancelar Premium",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                AppChat.INSTANCE.cancelarPremium();
+                JOptionPane.showMessageDialog(frame,
+                        "Tu suscripción Premium ha sido cancelada.",
+                        "Premium Cancelado",
+                        JOptionPane.INFORMATION_MESSAGE);
+                actualizarEstadoPremium(); 
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame,
+                        "Error al cancelar Premium: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void actualizarEstadoPremium() {
+        Usuario usuario = AppChat.INSTANCE.getUsuarioActual();
+        if (usuario != null && usuario.isPremium()) {
+            lblNombreUsuario.setText(usuario.getNombre() + " ⭐");
+            lblNombreUsuario.setForeground(new Color(255, 165, 0)); 
+        } else if (usuario != null) {
+            lblNombreUsuario.setText(usuario.getNombre());
+            lblNombreUsuario.setForeground(Color.BLACK);
         }
     }
 }
