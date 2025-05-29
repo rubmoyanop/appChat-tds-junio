@@ -454,4 +454,16 @@ public enum AppChat {
        
        usuarioDAO.modificarUsuario(usuarioActual);
    }
+   
+    /**
+     * Devuelve el coste original, el porcentaje de descuento y el coste final para la suscripción premium.
+     * @return Array: [costeOriginal, porcentajeDescuento, costeFinal]
+     */
+    public double[] getCostePremiumConDescuento() {
+        if (usuarioActual == null) throw new IllegalStateException("Debe iniciar sesión para ver el coste premium.");
+        Descuento estrategiaDescuento = FactoriaDescuentos.crearDescuento(DESCUENTO_POR_DEFECTO);
+        double porcentajeDescuento = estrategiaDescuento.calcularDescuento(usuarioActual);
+        double costeFinal = COSTE_PREMIUM * (1 - porcentajeDescuento);
+        return new double[] { COSTE_PREMIUM, porcentajeDescuento, costeFinal };
+    }
 }
