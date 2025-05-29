@@ -56,6 +56,8 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
         propiedades.add(new Propiedad("imagen", usuario.getImagen() != null ? usuario.getImagen() : ""));
         String fechaNacStr = usuario.getFechaNacimiento() != null ? usuario.getFechaNacimiento().format(DATE_FORMATTER) : "";
         propiedades.add(new Propiedad("fechaNacimiento", fechaNacStr));
+        String fechaRegistroStr = usuario.getFechaRegistro() != null ? usuario.getFechaRegistro().format(DATE_FORMATTER) : "";
+        propiedades.add(new Propiedad("fechaRegistro", fechaRegistroStr));
         propiedades.add(new Propiedad("saludo", usuario.getSaludo() != null ? usuario.getSaludo() : ""));
         propiedades.add(new Propiedad("isPremium", String.valueOf(usuario.isPremium())));
 
@@ -94,6 +96,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
         String contrasena = null;
         String imagen = null;
         LocalDate fechaNacimiento = null;
+        LocalDate fechaRegistro = null; 
         String saludo = null;
         boolean isPremium = false;
         String contactosIdsStr = null;
@@ -112,6 +115,8 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
                     System.err.println("Error parseando fecha de nacimiento para usuario ID " + entidad.getId() + ": " + fechaNacStr);
                 }
             }
+            fechaRegistro = servPersistencia.recuperarPropiedadEntidad(entidad, "fechaRegistro") != null ?
+                            LocalDate.parse(servPersistencia.recuperarPropiedadEntidad(entidad, "fechaRegistro"), DATE_FORMATTER) : null;
             saludo = servPersistencia.recuperarPropiedadEntidad(entidad, "saludo");
             String premiumStr = servPersistencia.recuperarPropiedadEntidad(entidad, "isPremium");
             isPremium = Boolean.parseBoolean(premiumStr);
@@ -120,7 +125,7 @@ public class UsuarioDAO_TDS implements UsuarioDAO {
             throw new DAOExcepcion("Error al recuperar propiedad de Entidad Usuario con ID: " + entidad.getId(), e);
         }
 
-        Usuario usuario = new Usuario(nombre, email, fechaNacimiento, movil, contrasena, imagen, saludo, isPremium);
+        Usuario usuario = new Usuario(nombre, email, fechaNacimiento, fechaRegistro, movil, contrasena, imagen, saludo, isPremium);
         usuario.setId(entidad.getId());
 
         poolUsuarios.addUsuario(usuario);
