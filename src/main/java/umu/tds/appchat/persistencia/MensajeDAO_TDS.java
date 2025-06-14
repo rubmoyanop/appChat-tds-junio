@@ -39,6 +39,8 @@ public class MensajeDAO_TDS implements MensajeDAO {
         propiedades.add(new Propiedad("fechaHora", fechaHoraStr));
         propiedades.add(new Propiedad("tipo", mensaje.getTipo().name()));
         propiedades.add(new Propiedad("codigoEmoji", String.valueOf(mensaje.getCodigoEmoji()))); // Store emoji code
+        propiedades.add(new Propiedad("mensajeDeGrupo", String.valueOf(mensaje.isMensajeDeGrupo())));
+
 
         entidad.setPropiedades(propiedades);
         return entidad;
@@ -67,6 +69,7 @@ public class MensajeDAO_TDS implements MensajeDAO {
         LocalDateTime fechaHora = null;
         TipoMensaje tipo = null;
         int codigoEmoji = -1; // -1 indica que no es un emoji
+        boolean mensajeDeGrupo = false; 
 
         try {
             texto = servPersistencia.recuperarPropiedadEntidad(entidad, "texto");
@@ -96,6 +99,15 @@ public class MensajeDAO_TDS implements MensajeDAO {
                     System.err.println("Error parseando codigoEmoji para mensaje ID " + entidad.getId() + ": " + codigoEmojiStr);
                 }
             }
+            String mensajeDeGrupoStr = servPersistencia.recuperarPropiedadEntidad(entidad, "mensajeDeGrupo");
+            if (mensajeDeGrupoStr != null) {
+                try{
+                    mensajeDeGrupo = Boolean.parseBoolean(mensajeDeGrupoStr);
+                } catch (Exception e){
+                    System.err.println("Error parseando mensajeDeGrupo para mensaje ID " + entidad.getId() + ": " + mensajeDeGrupoStr);
+                    throw new DAOExcepcion("Error parseando mensajeDeGrupo para mensaje ID " + entidad.getId(), e);
+                }
+            }
 
         } catch (Exception e) {
             throw new DAOExcepcion("Error al recuperar propiedad de Entidad Mensaje con ID: " + entidad.getId(), e);
@@ -112,6 +124,7 @@ public class MensajeDAO_TDS implements MensajeDAO {
             mensaje = new Mensaje(texto != null ? texto : "", fechaHora, tipo);
         }
         mensaje.setId(entidad.getId());
+        mensaje.setMensajeDeGrupo(mensajeDeGrupo);
 
         // Añadir al pool
         poolMensajes.addMensaje(mensaje);
@@ -173,6 +186,9 @@ public class MensajeDAO_TDS implements MensajeDAO {
 
             servPersistencia.eliminarPropiedadEntidad(entidad, "tipo");
             servPersistencia.anadirPropiedadEntidad(entidad, "tipo", mensaje.getTipo().name());
+
+            servPersistencia.eliminarPropiedadEntidad(entidad, "mensajeDeGrupo");
+            servPersistencia.anadirPropiedadEntidad(entidad, "mensajeDeGrupo", String.valueOf(mensaje.isMensajeDeGrupo()));
 
             // Actualizar en el pool si existe
             if (poolMensajes.contains(mensaje.getId())) {
