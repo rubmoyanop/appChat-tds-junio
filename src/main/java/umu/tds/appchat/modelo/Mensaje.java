@@ -8,6 +8,7 @@ public class Mensaje {
     private LocalDateTime fechaHora;
     private TipoMensaje tipo;
     private int codigoEmoji; // Los mensajes que no son emojis tienen -1 en este campo
+    private boolean mensajeDeGrupo; 
 
 
     public Mensaje(String texto, LocalDateTime fechaHora, TipoMensaje tipo) {
@@ -16,6 +17,7 @@ public class Mensaje {
         this.fechaHora = fechaHora;
         this.tipo = tipo;
         this.codigoEmoji = -1; // Los mensajes que no son emojis tienen -1 en este campo
+        this.mensajeDeGrupo = false;
     }
 
     public Mensaje(int codigoEmoji, LocalDateTime fechaHora, TipoMensaje tipo) {
@@ -24,6 +26,7 @@ public class Mensaje {
         this.fechaHora = fechaHora;
         this.tipo = tipo;
         this.codigoEmoji = codigoEmoji;
+        this.mensajeDeGrupo = false; 
     }
 
     public int getId() {
@@ -52,5 +55,13 @@ public class Mensaje {
 
     public boolean isEmoji() {
         return codigoEmoji != -1;
+    }
+
+    public boolean isMensajeDeGrupo() {
+        return mensajeDeGrupo;
+    }
+
+    public void setMensajeDeGrupo(boolean mensajeDeGrupo) {
+        this.mensajeDeGrupo = mensajeDeGrupo;
     }
 }
