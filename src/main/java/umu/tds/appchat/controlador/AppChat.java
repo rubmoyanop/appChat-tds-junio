@@ -7,6 +7,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors; 
 import java.util.Comparator;
+
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.io.font.constants.StandardFonts;
+import java.io.IOException;
+import java.io.File; 
+import java.time.format.DateTimeFormatter;
+import javax.swing.JFileChooser; 
+import javax.swing.filechooser.FileNameExtensionFilter; 
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -465,5 +478,43 @@ public enum AppChat {
         double porcentajeDescuento = estrategiaDescuento.calcularDescuento(usuarioActual);
         double costeFinal = COSTE_PREMIUM * (1 - porcentajeDescuento);
         return new double[] { COSTE_PREMIUM, porcentajeDescuento, costeFinal };
+    }
+
+    /**
+     * Exporta la conversación con un contacto individual a un archivo PDF,
+     * permitiendo al usuario elegir la ubicación de guardado.
+     * Solo para usuarios premium.
+     * @param contacto El contacto individual cuya conversación se va a exportar.
+     * @throws IllegalStateException Si el usuario actual no ha iniciado sesión o no es premium.
+     * @throws IllegalArgumentException Si el contacto es nulo.
+     * @throws IOException Si ocurre un error durante la generación del PDF o la selección del archivo.
+     */
+    public void exportarPDF(ContactoIndividual contacto) throws IOException {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("Debe iniciar sesión para exportar un chat a PDF.");
+        }
+        if (!usuarioActual.isPremium()) {
+            throw new IllegalStateException("Solo los usuarios premium pueden exportar chats a PDF.");
+        }
+        if (contacto == null) {
+            throw new IllegalArgumentException("El contacto no puede ser nulo para exportar a PDF.");
+        }
+
+        String nombreContactoMostrado = contacto.getNombre().isEmpty() ? contacto.getUsuario().getMovil() : contacto.getNombre();
+        String nombreContactoFile = nombreContactoMostrado.replaceAll("[^a-zA-Z0-9.-]", "_");
+        String fechaDescarga = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String nombreSugerido = "Chat_con_" + nombreContactoFile + "_" + fechaDescarga + ".pdf";
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar PDF como...");
+        fileChooser.setSelectedFile(new File(nombreSugerido));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos PDF (*.pdf)", "pdf")); 
+
+        int userSelection = fileChooser.showSaveDialog(null);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            
+        } else {
+            System.out.println("Exportación de PDF cancelada por el usuario.");
+        }
     }
 }
