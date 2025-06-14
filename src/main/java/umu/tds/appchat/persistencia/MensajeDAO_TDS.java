@@ -34,11 +34,11 @@ public class MensajeDAO_TDS implements MensajeDAO {
         entidad.setNombre("Mensaje");
 
         List<Propiedad> propiedades = new LinkedList<>();
-        propiedades.add(new Propiedad("texto", mensaje.isEmoji() ? "" : mensaje.getTexto())); // Store empty string for emojis
+        propiedades.add(new Propiedad("texto", mensaje.isEmoji() ? "" : mensaje.getTexto())); 
         String fechaHoraStr = mensaje.getFechaHora() != null ? mensaje.getFechaHora().format(DATE_TIME_FORMATTER) : "";
         propiedades.add(new Propiedad("fechaHora", fechaHoraStr));
         propiedades.add(new Propiedad("tipo", mensaje.getTipo().name()));
-        propiedades.add(new Propiedad("codigoEmoji", String.valueOf(mensaje.getCodigoEmoji()))); // Store emoji code
+        propiedades.add(new Propiedad("codigoEmoji", String.valueOf(mensaje.getCodigoEmoji()))); 
         propiedades.add(new Propiedad("mensajeDeGrupo", String.valueOf(mensaje.isMensajeDeGrupo())));
 
 

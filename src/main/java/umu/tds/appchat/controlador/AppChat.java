@@ -177,14 +177,17 @@ public enum AppChat {
         }
 
         // 1. Crear y enviar mensaje ENVIADO
-        Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+        // Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO); 
         if(contactoDestino instanceof Grupo) {
             for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
                 // Enviar el mensaje a cada miembro del grupo
                 Mensaje msgGrupo = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                msgGrupo.setMensajeDeGrupo(true); 
                 persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
             }
         } else {
+            Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
+            msgEnviado.setMensajeDeGrupo(false); 
             persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
         }
     }
@@ -206,10 +209,12 @@ public enum AppChat {
         if (contactoDestino instanceof Grupo) {
             for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
                 Mensaje msgGrupo = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+                msgGrupo.setMensajeDeGrupo(true);
                 persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
             }
         } else {
             Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
+            msgEnviado.setMensajeDeGrupo(false);
             persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
         }
     }
@@ -256,6 +261,7 @@ public enum AppChat {
             } else {
                 msgRecibido = new Mensaje(msgEnviado.getTexto(), msgEnviado.getFechaHora(), TipoMensaje.RECIBIDO);
             }
+            msgRecibido.setMensajeDeGrupo(msgEnviado.isMensajeDeGrupo()); 
 
             // Persistir el mensaje recibido
             mensajeDAO.registrarMensaje(msgRecibido);
@@ -512,7 +518,79 @@ public enum AppChat {
 
         int userSelection = fileChooser.showSaveDialog(null);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
-            
+            File fileToSave = fileChooser.getSelectedFile();
+            String pdfPath = fileToSave.getAbsolutePath();
+
+            if (!pdfPath.toLowerCase().endsWith(".pdf")) {
+                pdfPath += ".pdf";
+            }
+
+            PdfWriter writer = new PdfWriter(pdfPath);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            try {
+                Paragraph titulo = new Paragraph("Conversación con " + nombreContactoMostrado)
+                        .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD))
+                        .setFontSize(18)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginBottom(20);
+                document.add(titulo);
+
+                Paragraph exportInfo = new Paragraph("Exportado por: " + usuarioActual.getNombre() + "\nFecha de exportación: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                        .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
+                        .setFontSize(10)
+                        .setTextAlignment(TextAlignment.RIGHT)
+                        .setMarginBottom(15);
+                document.add(exportInfo);
+                
+                List<Mensaje> mensajes = new ArrayList<>(contacto.getMensajes());
+                List<Mensaje> mensajesDirectos = mensajes.stream()
+                                                         .filter(m -> !m.isMensajeDeGrupo())
+                                                         .sorted(Comparator.comparing(Mensaje::getFechaHora))
+                                                         .collect(Collectors.toList());
+
+                DateTimeFormatter msgTimestampFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+                for (Mensaje mensaje : mensajesDirectos) { 
+                    String emisor;
+                    TextAlignment alignment;
+
+                    if (mensaje.getTipo() == TipoMensaje.ENVIADO) {
+                        emisor = "Yo";
+                        alignment = TextAlignment.RIGHT;
+                    } else {
+                        emisor = nombreContactoMostrado;
+                        alignment = TextAlignment.LEFT;
+                    }
+
+                    String contenidoMensaje;
+                    if (mensaje.isEmoji()) {
+                        contenidoMensaje = "(Emoji: " + mensaje.getCodigoEmoji() + ")";
+                    } else {
+                        contenidoMensaje = mensaje.getTexto();
+                    }
+
+                    Paragraph msgParagraph = new Paragraph(
+                            mensaje.getFechaHora().format(msgTimestampFormatter) + "\n" +
+                            emisor + ": " + contenidoMensaje)
+                            .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
+                            .setFontSize(12)
+                            .setTextAlignment(alignment)
+                            .setMarginBottom(10);
+
+                    if (mensaje.getTipo() == TipoMensaje.ENVIADO) {
+                        msgParagraph.setMarginLeft(50); 
+                    } else {
+                        msgParagraph.setMarginRight(50);
+                    }
+                    document.add(msgParagraph);
+                }
+
+            } finally {
+                document.close(); 
+            }
+            System.out.println("Chat exportado a: " + pdfPath); 
         } else {
             System.out.println("Exportación de PDF cancelada por el usuario.");
         }
