@@ -95,6 +95,7 @@ public class VentanaPrincipal implements Ventana {
         JButton btnPremium = new JButton("Premium");
         JButton btnBuscarMensajes = new JButton("Buscar Mensajes");
         JButton btnModificarGrupo = new JButton("Modificar Grupo");
+        JButton btnExportarPDF = new JButton("Exportar Chat PDF");
 
         btnAddContacto.addActionListener(new ActionListener() {
             @Override
@@ -148,6 +149,28 @@ public class VentanaPrincipal implements Ventana {
             }
         });
 
+        btnExportarPDF.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (contactoSeleccionado == null) {
+                    JOptionPane.showMessageDialog(frame, "Debe seleccionar un contacto primero.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (!(contactoSeleccionado instanceof ContactoIndividual)) {
+                    JOptionPane.showMessageDialog(frame, "Solo se pueden exportar chats de contactos individuales.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (!AppChat.INSTANCE.getUsuarioActual().isPremium()) {
+                    JOptionPane.showMessageDialog(frame, "Solo los usuarios Premium pueden exportar chats a PDF.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                mostrarDialogoExportarPDF((ContactoIndividual) contactoSeleccionado);
+            }
+        });
+
         headerPanel.add(btnAddContacto);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnAddGrupo);
@@ -159,6 +182,8 @@ public class VentanaPrincipal implements Ventana {
         headerPanel.add(btnBuscarMensajes);
         headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         headerPanel.add(btnModificarGrupo);
+        headerPanel.add(Box.createRigidArea(new Dimension(5, 0)));
+        headerPanel.add(btnExportarPDF);
 
         headerPanel.add(Box.createHorizontalGlue());
 
@@ -942,5 +967,110 @@ public class VentanaPrincipal implements Ventana {
             lblNombreUsuario.setText(usuario.getNombre());
             lblNombreUsuario.setForeground(Color.BLACK);
         }
+    }
+
+    private void mostrarDialogoExportarPDF(ContactoIndividual contacto) {
+        JDialog dialogo = new JDialog(frame, "Exportar Chat a PDF", true);
+        dialogo.setSize(450, 200);
+        dialogo.setLocationRelativeTo(frame);
+        dialogo.setLayout(new BorderLayout(10, 10));
+
+        // Panel principal con información del contacto
+        JPanel panelInfo = new JPanel(new GridBagLayout());
+        panelInfo.setBorder(new EmptyBorder(20, 20, 10, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        String nombreContacto = contacto.getNombre().isEmpty() ? 
+            contacto.getUsuario().getMovil() : contacto.getNombre();
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JLabel lblTitulo = new JLabel("Exportar chat con: " + nombreContacto);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 14));
+        panelInfo.add(lblTitulo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panelInfo.add(new JLabel("Nombre del archivo:"), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
+        String nombreSugerido = AppChat.INSTANCE.generarNombreSugeridoPDF(contacto);
+        JTextField txtNombreArchivo = new JTextField(nombreSugerido);
+        panelInfo.add(txtNombreArchivo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JLabel lblMensajes = new JLabel("Mensajes a exportar: " + 
+            contacto.getMensajes().stream()
+                .filter(m -> !m.isMensajeDeGrupo())
+                .count());
+        lblMensajes.setFont(new Font("Arial", Font.ITALIC, 12));
+        panelInfo.add(lblMensajes, gbc);
+
+        dialogo.add(panelInfo, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotones.setBorder(new EmptyBorder(0, 20, 20, 20));
+
+        JButton btnCancelar = new JButton("Cancelar");
+        JButton btnExportar = new JButton("Exportar PDF");
+
+        btnCancelar.addActionListener(ev -> dialogo.dispose());
+
+        btnExportar.addActionListener(ev -> {
+            String nombreArchivo = txtNombreArchivo.getText().trim();
+            if (nombreArchivo.isEmpty()) {
+                JOptionPane.showMessageDialog(dialogo, "El nombre del archivo no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Selector de ubicación del archivo
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Guardar archivo PDF");
+            fileChooser.setSelectedFile(new java.io.File(nombreArchivo));
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Archivos PDF", "pdf"));
+
+            int userSelection = fileChooser.showSaveDialog(dialogo);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                java.io.File fileToSave = fileChooser.getSelectedFile();
+                String rutaCompleta = fileToSave.getAbsolutePath();
+                
+                // Asegurar que termine en .pdf
+                if (!rutaCompleta.toLowerCase().endsWith(".pdf")) {
+                    rutaCompleta += ".pdf";
+                }
+
+                try {
+                    boolean exito = AppChat.INSTANCE.exportarPDF(contacto, rutaCompleta);
+                    if (exito) {
+                        JOptionPane.showMessageDialog(dialogo, 
+                            "Chat exportado exitosamente a:\n" + rutaCompleta, 
+                            "Exportación Exitosa", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                        dialogo.dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(dialogo, 
+                            "Error al exportar el chat. Inténtelo de nuevo.", 
+                            "Error de Exportación", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(dialogo, 
+                        "Error al exportar chat: " + e.getMessage(), 
+                        "Error", 
+                        JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        panelBotones.add(btnCancelar);
+        panelBotones.add(btnExportar);
+        dialogo.add(panelBotones, BorderLayout.SOUTH);
+
+        dialogo.setVisible(true);
     }
 }
