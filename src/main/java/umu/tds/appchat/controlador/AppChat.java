@@ -7,19 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors; 
 import java.util.Comparator;
-
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.io.font.constants.StandardFonts;
-import java.io.IOException;
-import java.io.File; 
 import java.time.format.DateTimeFormatter;
-import javax.swing.JFileChooser; 
-import javax.swing.filechooser.FileNameExtensionFilter; 
+
 import umu.tds.appchat.dao.*;
 import umu.tds.appchat.modelo.*;
 
@@ -487,15 +476,14 @@ public enum AppChat {
     }
 
     /**
-     * Exporta la conversación con un contacto individual a un archivo PDF,
-     * permitiendo al usuario elegir la ubicación de guardado.
+     * Genera los datos necesarios para exportar un chat a PDF.
      * Solo para usuarios premium.
      * @param contacto El contacto individual cuya conversación se va a exportar.
+     * @return DatosExportacionPDF con toda la información necesaria para generar el PDF.
      * @throws IllegalStateException Si el usuario actual no ha iniciado sesión o no es premium.
      * @throws IllegalArgumentException Si el contacto es nulo.
-     * @throws IOException Si ocurre un error durante la generación del PDF o la selección del archivo.
      */
-    public void exportarPDF(ContactoIndividual contacto) throws IOException {
+    public DatosExportacionPDF prepararExportacionPDF(ContactoIndividual contacto) {
         if (usuarioActual == null) {
             throw new IllegalStateException("Debe iniciar sesión para exportar un chat a PDF.");
         }
@@ -506,93 +494,71 @@ public enum AppChat {
             throw new IllegalArgumentException("El contacto no puede ser nulo para exportar a PDF.");
         }
 
-        String nombreContactoMostrado = contacto.getNombre().isEmpty() ? contacto.getUsuario().getMovil() : contacto.getNombre();
+        String nombreContactoMostrado = contacto.getNombre().isEmpty() ? 
+            contacto.getUsuario().getMovil() : contacto.getNombre();
+        
+        List<Mensaje> mensajesDirectos = contacto.getMensajes().stream()
+            .filter(m -> !m.isMensajeDeGrupo())
+            .sorted(Comparator.comparing(Mensaje::getFechaHora))
+            .collect(Collectors.toList());
+
+        return new DatosExportacionPDF(
+            nombreContactoMostrado,
+            usuarioActual.getNombre(),
+            LocalDateTime.now(),
+            mensajesDirectos
+        );
+    }
+
+    /**
+     * Genera el nombre sugerido para el archivo PDF.
+     * @param contacto El contacto para el cual se genera el nombre.
+     * @return Nombre sugerido para el archivo PDF.
+     */
+    public String generarNombreSugeridoPDF(ContactoIndividual contacto) {
+        if (contacto == null) {
+            throw new IllegalArgumentException("El contacto no puede ser nulo.");
+        }
+        
+        String nombreContactoMostrado = contacto.getNombre().isEmpty() ? 
+            contacto.getUsuario().getMovil() : contacto.getNombre();
         String nombreContactoFile = nombreContactoMostrado.replaceAll("[^a-zA-Z0-9.-]", "_");
         String fechaDescarga = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String nombreSugerido = "Chat_con_" + nombreContactoFile + "_" + fechaDescarga + ".pdf";
+        return "Chat_con_" + nombreContactoFile + "_" + fechaDescarga + ".pdf";
+    }
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Guardar PDF como...");
-        fileChooser.setSelectedFile(new File(nombreSugerido));
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos PDF (*.pdf)", "pdf")); 
+    /**
+     * Exporta un chat a PDF. Solo disponible para usuarios premium.
+     * @param contacto El contacto individual cuya conversación se va a exportar.
+     * @param rutaArchivo La ruta donde guardar el archivo PDF.
+     * @return true si la exportación fue exitosa, false en caso contrario.
+     * @throws IllegalStateException Si el usuario actual no ha iniciado sesión o no es premium.
+     * @throws IllegalArgumentException Si el contacto es nulo o no es un ContactoIndividual.
+     */
+    public boolean exportarPDF(ContactoIndividual contacto, String rutaArchivo) {
+        if (contacto == null) {
+            throw new IllegalArgumentException("El contacto no puede ser nulo para exportar a PDF.");
+        }
+        if (rutaArchivo == null || rutaArchivo.trim().isEmpty()) {
+            throw new IllegalArgumentException("La ruta del archivo no puede estar vacía.");
+        }
 
-        int userSelection = fileChooser.showSaveDialog(null);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = fileChooser.getSelectedFile();
-            String pdfPath = fileToSave.getAbsolutePath();
-
-            if (!pdfPath.toLowerCase().endsWith(".pdf")) {
-                pdfPath += ".pdf";
-            }
-
-            PdfWriter writer = new PdfWriter(pdfPath);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf);
-
-            try {
-                Paragraph titulo = new Paragraph("Conversación con " + nombreContactoMostrado)
-                        .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD))
-                        .setFontSize(18)
-                        .setTextAlignment(TextAlignment.CENTER)
-                        .setMarginBottom(20);
-                document.add(titulo);
-
-                Paragraph exportInfo = new Paragraph("Exportado por: " + usuarioActual.getNombre() + "\nFecha de exportación: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
-                        .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
-                        .setFontSize(10)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .setMarginBottom(15);
-                document.add(exportInfo);
-                
-                List<Mensaje> mensajes = new ArrayList<>(contacto.getMensajes());
-                List<Mensaje> mensajesDirectos = mensajes.stream()
-                                                         .filter(m -> !m.isMensajeDeGrupo())
-                                                         .sorted(Comparator.comparing(Mensaje::getFechaHora))
-                                                         .collect(Collectors.toList());
-
-                DateTimeFormatter msgTimestampFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-                for (Mensaje mensaje : mensajesDirectos) { 
-                    String emisor;
-                    TextAlignment alignment;
-
-                    if (mensaje.getTipo() == TipoMensaje.ENVIADO) {
-                        emisor = "Yo";
-                        alignment = TextAlignment.RIGHT;
-                    } else {
-                        emisor = nombreContactoMostrado;
-                        alignment = TextAlignment.LEFT;
-                    }
-
-                    String contenidoMensaje;
-                    if (mensaje.isEmoji()) {
-                        contenidoMensaje = "(Emoji: " + mensaje.getCodigoEmoji() + ")";
-                    } else {
-                        contenidoMensaje = mensaje.getTexto();
-                    }
-
-                    Paragraph msgParagraph = new Paragraph(
-                            mensaje.getFechaHora().format(msgTimestampFormatter) + "\n" +
-                            emisor + ": " + contenidoMensaje)
-                            .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
-                            .setFontSize(12)
-                            .setTextAlignment(alignment)
-                            .setMarginBottom(10);
-
-                    if (mensaje.getTipo() == TipoMensaje.ENVIADO) {
-                        msgParagraph.setMarginLeft(50); 
-                    } else {
-                        msgParagraph.setMarginRight(50);
-                    }
-                    document.add(msgParagraph);
-                }
-
-            } finally {
-                document.close(); 
-            }
-            System.out.println("Chat exportado a: " + pdfPath); 
-        } else {
-            System.out.println("Exportación de PDF cancelada por el usuario.");
+        try {
+            // Preparar los datos para la exportación
+            DatosExportacionPDF datos = prepararExportacionPDF(contacto);
+            
+            // Generar el PDF usando iText
+            GeneradorPDF.generarPDF(datos, rutaArchivo);
+            
+            System.out.println("Chat exportado exitosamente a: " + rutaArchivo);
+            return true;
+            
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error al exportar PDF: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 }
