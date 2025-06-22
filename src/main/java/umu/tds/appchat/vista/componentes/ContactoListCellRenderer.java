@@ -4,7 +4,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import umu.tds.appchat.modelo.Contacto;
+import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Mensaje;
+import umu.tds.appchat.vista.util.ImagenPerfilUtil;
 import umu.tds.appchat.modelo.Grupo;
 import java.time.format.DateTimeFormatter;
 
@@ -51,16 +53,28 @@ public class ContactoListCellRenderer extends JPanel implements ListCellRenderer
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Contacto> list, Contacto contacto, int index, boolean isSelected, boolean cellHasFocus) {
-        // Imagen de usuario (placeholder)
+        // Configurar imagen y nombre según el tipo de contacto
         if (contacto instanceof Grupo) {
             lblFoto.setText("G");
             lblFoto.setIcon(null);
             lblFoto.setBackground(new Color(200, 230, 200));
             lblNombre.setText(contacto.getNombre() + " (Grupo)");
             lblNombre.setForeground(new Color(0, 102, 0));
-        } else {
-            lblFoto.setText("F");
-            lblFoto.setIcon(null);
+        } else if (contacto instanceof ContactoIndividual) {
+            ContactoIndividual contactoIndividual = (ContactoIndividual) contacto;
+            
+            // Intentar cargar imagen de perfil del usuario
+            ImageIcon imagenPerfil = ImagenPerfilUtil.cargarImagenPerfil(
+                contactoIndividual.getUsuario().getImagen(), 40, 40);
+            
+            if (imagenPerfil != null) {
+                lblFoto.setIcon(imagenPerfil);
+                lblFoto.setText("");
+            } else {
+                lblFoto.setIcon(null);
+                lblFoto.setText("F");
+            }
+            
             lblFoto.setBackground(Color.WHITE);
             lblNombre.setText(contacto.getNombre());
             lblNombre.setForeground(Color.BLACK);

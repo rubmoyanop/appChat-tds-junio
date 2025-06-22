@@ -11,14 +11,14 @@ import umu.tds.appchat.vista.componentes.PanelMensajes;
 import umu.tds.appchat.vista.core.GestorVentanas;
 import umu.tds.appchat.vista.core.TipoVentana;
 import umu.tds.appchat.vista.core.Ventana;
+import umu.tds.appchat.vista.util.ImagenPerfilUtil;
 import umu.tds.appchat.modelo.ContactoIndividual;
 import umu.tds.appchat.modelo.Grupo;
 import umu.tds.appchat.modelo.ResultadoBusqueda;
 import umu.tds.appchat.vista.componentes.ContactoGrupoCellRenderer;
 import umu.tds.appchat.vista.componentes.ListaContactosPanel;
 import umu.tds.appchat.vista.componentes.MensajeListCellRenderer;
-import umu.tds.appchat.vista.componentes.ModeloTablaContactos; 
-
+import umu.tds.appchat.vista.componentes.ModeloTablaContactos;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -560,7 +560,7 @@ public class VentanaPrincipal implements Ventana {
 
     private void mostrarListaContactos() {
         JDialog dialogoContactos = new JDialog(frame, "Lista de Contactos y Grupos", true);
-        dialogoContactos.setSize(600, 400);
+        dialogoContactos.setSize(700, 400); // Aumentar ancho para la nueva columna
         dialogoContactos.setLocationRelativeTo(frame);
         dialogoContactos.setLayout(new BorderLayout(10, 10));
 
@@ -570,6 +570,17 @@ public class VentanaPrincipal implements Ventana {
         JTable tablaContactos = new JTable(tableModel);
         tablaContactos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaContactos.setFillsViewportHeight(true);
+        
+        // Configurar el ancho de las columnas
+        tablaContactos.getColumnModel().getColumn(0).setPreferredWidth(60); // Columna de foto
+        tablaContactos.getColumnModel().getColumn(0).setMaxWidth(60);
+        tablaContactos.getColumnModel().getColumn(0).setMinWidth(60);
+        tablaContactos.getColumnModel().getColumn(1).setPreferredWidth(150); // Nombre
+        tablaContactos.getColumnModel().getColumn(2).setPreferredWidth(120); // Teléfono
+        tablaContactos.getColumnModel().getColumn(3).setPreferredWidth(200); // Saludo
+        
+        // Configurar altura de filas para acomodar las imágenes
+        tablaContactos.setRowHeight(40);
 
         tablaContactos.getSelectionModel().addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting() && tablaContactos.getSelectedRow() != -1) {
@@ -787,8 +798,17 @@ public class VentanaPrincipal implements Ventana {
         Usuario usuario = AppChat.INSTANCE.getUsuarioActual();
         if (usuario != null) {
             lblNombreUsuario.setText(usuario.getNombre());
-            lblFotoUsuario.setText("Foto");
-            lblFotoUsuario.setIcon(null);
+            
+            // Intentar cargar imagen de perfil del usuario
+            ImageIcon imagenPerfil = ImagenPerfilUtil.cargarImagenPerfil(usuario.getImagen(), 40, 30);
+            if (imagenPerfil != null) {
+                lblFotoUsuario.setIcon(imagenPerfil);
+                lblFotoUsuario.setText("");
+            } else {
+                lblFotoUsuario.setIcon(null);
+                lblFotoUsuario.setText("Foto");
+            }
+            
             actualizarEstadoPremium(); 
         } else {
             lblNombreUsuario.setText("Usuario Desconocido");
