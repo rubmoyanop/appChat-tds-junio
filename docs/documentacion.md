@@ -5,7 +5,7 @@
 **Curso**: 4º PCEO - Universidad de Murcia  
 **Fecha**: 22 de junio de 2025  
 **Duración del Proyecto**: 28 de abril - 22 de junio de 2025 (55 días)
-
+**Proyecto desarrollado por:** Rubén Moyano Palazón y Alejandro Cerezal Jiménez
 ---
 
 ## Índice de Contenidos
@@ -1324,5 +1324,10 @@ Cada Historia de Usuario se dividió en tareas pequeñas por capa, lo que facili
 
 El proyecto ha demostrado la importancia de una arquitectura bien diseñada y la aplicación correcta de patrones de diseño para crear una aplicación mantenible y extensible.
 
+
+#### Tiempo estimado
+
+- Rubén Moyano Palazón: 40 horas
+- Alejandro Cerezal Jiménez: 40 horas
 ---
 
