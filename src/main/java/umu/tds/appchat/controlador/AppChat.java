@@ -295,6 +295,18 @@ public enum AppChat {
         }
         // Actualizar el grupo en la persistencia
         grupoDAO.modificarGrupo(g);
+        // Crear una copia modificable de la lista de contactos
+        List<Contacto> contactos = new ArrayList<>(usuarioActual.getContactos());
+        for (int i = 0; i < contactos.size(); i++) {
+            Contacto c = contactos.get(i);
+            if (c instanceof Grupo && c.getId() == g.getId()) {
+                contactos.set(i, g);
+                break;
+            }
+        }
+        usuarioActual.setContactos(contactos);
+        // Persistir el usuario actualizado
+        usuarioDAO.modificarUsuario(usuarioActual);
         return true;
     }
 
