@@ -8,9 +8,9 @@
 
 ---
 
-## 1. Índice de Contenidos
+## Índice de Contenidos
 
-1. [Índice de Contenidos](#1-índice-de-contenidos)
+1. [Historias de Usuario](#1-historias-de-usuario)
 2. [Diagrama de Clases del Dominio](#2-diagrama-de-clases-del-dominio)
 3. [Diagrama de Secuencia - Añadir Contacto a Grupo](#3-diagrama-de-secuencia---añadir-contacto-a-grupo)
 4. [Arquitectura de la Aplicación y Decisiones de Diseño](#4-arquitectura-de-la-aplicación-y-decisiones-de-diseño)
@@ -31,6 +31,170 @@
 6. [Observaciones Finales](#6-observaciones-finales)
 
 ---
+
+## 1 Historias de Usuario
+
+### 1. Registro de un nuevo usuario
+
+**Como** usuario no registrado,  
+**quiero** poder registrarme en el sistema proporcionando mis datos personales,  
+**para** poder acceder a la aplicación de mensajería y utilizar sus funcionalidades.
+
+**Criterios de Verificación:**
+- El formulario de registro debe solicitar al menos los siguientes datos: nombre completo, fecha de nacimiento (opcional), email, imagen de perfil (opcional), número de teléfono y contraseña.
+- El usuario debe repetir la contraseña para verificarla.
+- El sistema debe validar que todos los campos obligatorios estén completos.
+- Si el registro es exitoso, el usuario debe recibir una confirmación y ser redirigido a la página de inicio de sesión.
+- Si el número de teléfono ya está registrado, el sistema debe mostrar un mensaje de error adecuado.
+
+---
+
+### 2. Inicio de sesión
+
+**Como** usuario registrado,  
+**quiero** iniciar sesión en la aplicación utilizando mi número de teléfono y contraseña,  
+**para** acceder a mis contactos y mensajes.
+
+**Criterios de Verificación:**
+- El formulario de inicio de sesión debe permitir introducir el número de teléfono y la contraseña.
+- El sistema debe validar que las credenciales coincidan con las de un usuario registrado.
+- Si el inicio de sesión es exitoso, el usuario debe ser redirigido a la pantalla principal de la aplicación.
+- Si el número de teléfono o la contraseña no coinciden, el sistema debe mostrar un mensaje de error.
+
+---
+
+### 3. Añadir contacto
+
+**Como** usuario registrado,  
+**quiero** añadir un nuevo contacto a mi lista de contactos,  
+**para** poder enviarle mensajes fácilmente.
+
+**Criterios de Verificación:**
+- El usuario debe poder añadir un contacto proporcionando un número de teléfono y un nombre asociado.
+- El sistema debe validar que el número de teléfono no esté ya en la lista de contactos del usuario.
+- Si el número de teléfono no existe en el sistema, el sistema debe notificar al usuario con un mensaje de error.
+- El nuevo contacto debe aparecer en la lista de contactos del usuario una vez añadido con éxito.
+
+---
+
+### 4. Crear grupo
+
+**Como** usuario,  
+**quiero** crear un grupo de contactos,  
+**para** facilitar el envío de mensajes a varios contactos al mismo tiempo.
+
+**Criterios de Verificación:**
+- El sistema debe permitir al usuario crear un grupo proporcionando un nombre para el grupo y opcionalmente una imagen.
+- El usuario debe poder añadir varios contactos existentes al grupo.
+- El sistema debe validar que el nombre del grupo no esté vacío.
+- El grupo recién creado debe aparecer en la lista de contactos del usuario.
+- El usuario debe poder modificar la lista de miembros del grupo o eliminar el grupo.
+
+---
+
+### 5. Enviar y recibir mensajes
+
+**Como** usuario registrado,  
+**quiero** enviar y recibir mensajes a/de mis contactos,  
+**para** poder comunicarme con ellos de forma rápida y eficiente.
+
+**Criterios de Verificación:**
+- El usuario debe poder seleccionar un contacto o un grupo de su lista de contactos para enviar un mensaje.
+- El mensaje debe incluir texto o un emoticono, y se debe registrar con la fecha y hora de envío.
+- El mensaje debe aparecer inmediatamente en la ventana de conversación una vez enviado, y mostrar el nombre y la hora de envío.
+- Si se recibe un mensaje de un usuario que no es un contacto, se debe mostrar su número de teléfono en vez del nombre en el mensaje.
+- Si el emisor no está en la lista de contactos del usuario, el sistema debe permitir al usuario añadirlo como contacto.
+- Los mensajes enviados a un grupo se envían individualmente a cada uno de los contactos del grupo.
+
+---
+
+### 6. Convertirse en usuario premium
+
+**Como** usuario registrado,  
+**quiero** poder convertirme en usuario premium pagando una suscripción,  
+**para** acceder a funciones adicionales como la exportación de mensajes.
+
+**Criterios de Verificación:**
+- El sistema debe permitir al usuario registrarse como premium mediante el pago de una suscripción anual.
+- El usuario premium debe ver un icono o indicador que confirme su estado premium.
+- El sistema debe aplicar descuentos automáticos basados en la fecha de registro o el número de mensajes enviados en el último mes.
+- El usuario premium debe tener acceso a funciones adicionales como la exportación de mensajes en PDF.
+- El usuario debe poder cancelar la suscripción premium en cualquier momento, y el sistema debe revertir el acceso a las funcionalidades premium tras la cancelación.
+
+---
+
+### 7. Buscar mensajes
+
+**Como** usuario registrado,  
+**quiero** buscar mensajes por fragmento de texto, nombre de contacto o número de teléfono,  
+**para** encontrar fácilmente los mensajes que necesito.
+
+**Criterios de Verificación:**
+- El sistema debe permitir buscar mensajes enviados o recibidos por el usuario filtrando por fragmento de texto, nombre del contacto o número de teléfono.
+- Los resultados de la búsqueda deben mostrarse en forma de lista, ordenados por fecha y hora de envío.
+- El sistema debe permitir combinar varios criterios de búsqueda (por ejemplo, texto y contacto).
+- Al hacer clic en un mensaje de los resultados de la búsqueda, se debe abrir la conversación completa en la interfaz de usuario.
+
+---
+
+### 8. Exportar mensajes a PDF (solo premium)
+
+**Como** usuario premium,  
+**quiero** exportar mis conversaciones con un contacto a un archivo PDF,  
+**para** tener un registro de los mensajes intercambiados.
+
+**Criterios de Verificación:**
+- El sistema debe permitir al usuario seleccionar una conversación para exportarla a PDF.
+- El archivo PDF debe incluir los nombres de los participantes, el contenido del mensaje, y la fecha y hora de cada mensaje.
+- El archivo PDF debe generarse correctamente y descargarse en el dispositivo del usuario.
+
+---
+
+### 9. Añadir contacto a un grupo
+
+**Como** usuario,  
+**quiero** añadir un nuevo contacto a un grupo de contactos,  
+**para** que reciba los mensajes que se envíen.
+
+**Criterios de Verificación:**
+- El sistema debe validar que el contacto a modificar es un grupo.
+- El sistema debe permitir al usuario modificar un grupo proporcionando una lista de los contactos disponibles y una lista de los contactos actuales del grupo.
+- El usuario debe poder añadir varios contactos que no pertenezcan al grupo a este.
+- El sistema debe validar que en el grupo haya al menos un contacto.
+- El grupo recién modificado debe aparecer actualizado en la lista de contactos del usuario.
+
+---
+
+### 10. Eliminar contacto de un grupo
+
+**Como** usuario,  
+**quiero** eliminar un contacto de un grupo de contactos,  
+**para** que no reciba los mensajes que se envíen.
+
+**Criterios de Verificación:**
+- El sistema debe validar que el contacto a modificar es un grupo.
+- El sistema debe permitir al usuario modificar un grupo proporcionando una lista de los contactos disponibles y una lista de los contactos actuales del grupo.
+- El usuario debe poder eliminar varios contactos que pertenezcan al grupo de este.
+- El sistema debe validar que en el grupo haya al menos un contacto.
+- El grupo recién modificado debe aparecer actualizado en la lista de contactos del usuario.
+
+---
+
+### 11. Desactivar cuenta premium
+
+**Como** usuario premium,
+**quiero** cancelar mi suscripción premium,  
+**para** no pagar y dejar de acceder a servicios especiales.
+
+**Criterios de Verificación:**
+- El sistema debe verificar que el usuario es actualmente premium.
+- El usuario premium dejará de ver un icono o indicador que confirme su estado premium.
+- El sistema ya no aplicará descuentos automáticos basados en la fecha de registro o el número de mensajes enviados en el último mes.
+- El usuario registrado no debe tener acceso a funciones adicionales como la exportación de mensajes en PDF.
+- El usuario debe poder pagar la suscripción premium en cualquier momento, y el sistema debe otorgar el acceso a las funcionalidades premium tras el pago.
+
+---
+
 
 ## 2. Diagrama de Clases del Dominio
 
