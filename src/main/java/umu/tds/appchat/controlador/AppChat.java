@@ -172,12 +172,12 @@ public enum AppChat {
                 // Enviar el mensaje a cada miembro del grupo
                 Mensaje msgGrupo = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
                 msgGrupo.setMensajeDeGrupo(true); 
-                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
             }
         } else {
             Mensaje msgEnviado = new Mensaje(texto, LocalDateTime.now(), TipoMensaje.ENVIADO);
             msgEnviado.setMensajeDeGrupo(false); 
-            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
         }
     }
 
@@ -199,12 +199,12 @@ public enum AppChat {
             for (Contacto contacto : ((Grupo) contactoDestino).getMiembros()) {
                 Mensaje msgGrupo = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
                 msgGrupo.setMensajeDeGrupo(true);
-                persistirMensaje((ContactoIndividual) contacto, msgGrupo, true);
+                persistirMensaje((ContactoIndividual) contacto, msgGrupo);
             }
         } else {
             Mensaje msgEnviado = new Mensaje(emojiCode, LocalDateTime.now(), TipoMensaje.ENVIADO);
             msgEnviado.setMensajeDeGrupo(false);
-            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado, false);
+            persistirMensaje((ContactoIndividual) contactoDestino, msgEnviado);
         }
     }
 
@@ -214,19 +214,13 @@ public enum AppChat {
      * @param msgEnviado El mensaje ya marcado como ENVIADO.
      * @throws DAOExcepcion Si ocurre un error de persistencia.
      */
-    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado, boolean guardarEnRemitente) throws DAOExcepcion {
+    private void persistirMensaje(ContactoIndividual contactoDestino, Mensaje msgEnviado) throws DAOExcepcion {
         // Persistir el mensaje enviado
         mensajeDAO.registrarMensaje(msgEnviado);
-        // Añadir al contacto del remitente y actualizar en persistencia
-        contactoDestino.agregarMensaje(msgEnviado);
-        contactoIndividualDAO.modificarContactoIndividual(contactoDestino);
-
-        if (guardarEnRemitente && usuarioActual != null) {
-            ContactoIndividual miContacto = usuarioActual.buscarContactoIndividualPorMovil(contactoDestino.getUsuario().getMovil());
-            if (miContacto != null) {
-                miContacto.agregarMensaje(msgEnviado);
-                contactoIndividualDAO.modificarContactoIndividual(miContacto);
-            }
+        
+        ContactoIndividual contactoEnListaUsuario = usuarioActual.buscarContactoIndividualPorMovil(contactoDestino.getMovil());
+        if (contactoEnListaUsuario != null) {
+            contactoEnListaUsuario.agregarMensaje(msgEnviado);
         }
 
         // 2. Simular recepción en el otro usuario
@@ -295,6 +289,18 @@ public enum AppChat {
         }
         // Actualizar el grupo en la persistencia
         grupoDAO.modificarGrupo(g);
+        // Crear una copia modificable de la lista de contactos
+        List<Contacto> contactos = new ArrayList<>(usuarioActual.getContactos());
+        for (int i = 0; i < contactos.size(); i++) {
+            Contacto c = contactos.get(i);
+            if (c instanceof Grupo && c.getId() == g.getId()) {
+                contactos.set(i, g);
+                break;
+            }
+        }
+        usuarioActual.setContactos(contactos);
+        // Persistir el usuario actualizado
+        usuarioDAO.modificarUsuario(usuarioActual);
         return true;
     }
 

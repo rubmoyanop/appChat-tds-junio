@@ -53,12 +53,6 @@ public class VentanaBienvenida implements Ventana {
         // Espacio entre elementos
         contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
         
-        // Mensaje descriptivo
-        JLabel lblDescription = new JLabel("Tu aplicación de mensajería simple y segura");
-        lblDescription.setFont(new Font("Arial", Font.PLAIN, 24));
-        lblDescription.setAlignmentX(Component.CENTER_ALIGNMENT);
-        contentPanel.add(lblDescription);
-        
         // Espacio entre elementos
         contentPanel.add(Box.createRigidArea(new Dimension(0, 60)));
         
