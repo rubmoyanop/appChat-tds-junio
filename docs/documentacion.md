@@ -4,6 +4,7 @@
 **Asignatura**: Tecnologías de Desarrollo de Software (TDS)  
 **Curso**: 4º PCEO - Universidad de Murcia  
 **Fecha**: 22 de junio de 2025  
+**Profesor**: Jose Ramón Hoyos Barcelo
 **Duración del Proyecto**: 28 de abril - 22 de junio de 2025 (55 días)
 **Proyecto desarrollado por:** Rubén Moyano Palazón y Alejandro Cerezal Jiménez
 ---
