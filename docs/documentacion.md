@@ -6,6 +6,7 @@
 **Fecha**: 22 de junio de 2025  
 **Duración del Proyecto**: 28 de abril - 22 de junio de 2025 (55 días)
 **Proyecto desarrollado por:** Rubén Moyano Palazón y Alejandro Cerezal Jiménez
+
 ---
 
 ## Índice de Contenidos
