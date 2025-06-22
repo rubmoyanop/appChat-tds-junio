@@ -173,7 +173,6 @@ public class VentanaRegistro implements Ventana {
         // Campo de texto para la URL de la imagen (a la derecha del saludo)
         txtImagenURL = new JTextField();
         txtImagenURL.setFont(new Font("Arial", Font.PLAIN, 14));
-        txtImagenURL.setToolTipText("Introduce la URL de una imagen (ej: https://ejemplo.com/imagen.jpg)");
         gbc.gridx = 1;
         gbc.gridy = 11;
         gbc.gridwidth = 1;
